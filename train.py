@@ -25,8 +25,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('Collaborative Deep Learning training')
     parser.add_argument('--seed', type=int, default=1)
 
-    parser.add_argument('--embedding', choices=['bert', 'bow'], default='bert')
-    parser.add_argument('--dataset', choices=['citeulike-a', 'citeulike-t'], default='citeulike-a')
+    parser.add_argument('--embedding', choices=['bert', 'bow'], default=None)
+    parser.add_argument('--embedding_path', type=str, default=None)
+    parser.add_argument('--dataset', type=str, default='citeulike-a')
+    parser.add_argument('--train_dataset_path', type=str, default=None)
+    parser.add_argument('--test_dataset_path', type=str, default=None)
     parser.add_argument('--recall', type=int, default=300)
     parser.add_argument('--out', default='model.pt')
 
@@ -67,13 +70,13 @@ if __name__ == '__main__':
     logging.info(f'Using device {device}')
 
     logging.info(f'Loading content dataset ({args.embedding})')
-    content_dataset = data.load_content_embeddings(args.dataset, args.embedding, device=device)
+    content_dataset = data.load_content_embeddings(args.dataset, args.embedding, args.embedding_path, device=device)
     num_items, in_features = content_dataset.shape
     # content_dataset.shape: (16980, 8000)
 
     logging.info('Loading ratings datasets')
-    ratings_training_dataset = data.load_cf_train_data(args.dataset)
-    ratings_test_dataset = data.load_cf_test_data(args.dataset)
+    ratings_training_dataset = data.load_cf_train_data(args.dataset, train_dataset_path)
+    ratings_test_dataset = data.load_cf_test_data(args.dataset, test_dataset_path)
 
     config = {
         'conf_a': args.conf_a,

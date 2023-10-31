@@ -23,21 +23,25 @@ def bernoulli_corrupt(x, p):
     return x * mask
 
 
-def load_content_embeddings(dataset_name, embedding, device=None):
-    x = torch.load(f'data/processed/{dataset_name}/content-{embedding}.pt', map_location=device)
-
+def load_content_embeddings(dataset_name, embedding=None, path=None, device=None):
+    if embedding is None and path is None: 
+        raise Exception('Please specify either embedding model with --embedding,' 
+        'or custom path of precomputed embeddings with --embedding_path')
+    if path is None: path = f'data/processed/{dataset_name}/content-{embedding}.pt'
+    x = torch.load(path, map_location=device)
     if x.is_sparse:
         x = x.to_dense()
-
     return x
 
 
-def load_cf_train_data(dataset_name):
-    return torch.load(f'data/processed/{dataset_name}/cf-train-1.pt')
+def load_cf_train_data(dataset_name, path=None):
+    if path is None: path = f'data/processed/{dataset_name}/cf-train-1.pt'
+    return torch.load(path)
 
 
-def load_cf_test_data(dataset_name):
-    return torch.load(f'data/processed/{dataset_name}/cf-test-1.pt')
+def load_cf_test_data(dataset_name, path=None):
+    if path is None: path = f'data/processed/{dataset_name}/cf-test-1.pt'
+    return torch.load(path)
 
 
 def save_model(sdae, mfm, filename):
@@ -55,3 +59,35 @@ def load_model(sdae, mfm, filename):
 
     if mfm is not None:
         mfm.update_state_dict(d['matrix_factorization_model'])
+
+# AMZ_CHOICES = [
+#     'Amazon Fashion'
+#     'All Beauty'
+#     'Appliances'
+#     'Arts, Crafts and Sewing'
+#     'Automotive'
+#     'Books'
+#     'CDs and Vinyl'
+#     'Cell Phones and Accessories'
+#     'Clothing, Shoes and Jewelry'
+#     'Digital Music'
+#     'Electronics'
+#     'Gift Cards'
+#     'Grocery and Gourmet Food'
+#     'Home and Kitchen'
+#     'Industrial and Scientific'
+#     'Kindle Store'
+#     'Luxury Beauty'
+#     'Magazine Subscriptions'
+#     'Movies and TV'
+#     'Musical Instruments'
+#     'Office Products'
+#     'Patio, Lawn and Garden'
+#     'Pet Supplies'
+#     'Prime Pantry'
+#     'Software'
+#     'Sports and Outdoors'
+#     'Tools and Home Improvement'
+#     'Toys and Games'
+#     'Video Games'
+# ]
