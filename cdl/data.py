@@ -28,7 +28,8 @@ def load_content_embeddings(dataset_name, embedding=None, path=None, device=None
         raise Exception('Please specify either embedding model with --embedding,' 
         'or custom path of precomputed embeddings with --embedding_path')
     if path is None: path = f'data/processed/{dataset_name}/content-{embedding}.pt'
-    x = torch.load(path, map_location=device)
+    # Make sure dtype of loaded embeddings is double (float64)
+    x = torch.load(path, map_location=device).to(torch.double)
     if x.is_sparse:
         x = x.to_dense()
     return x
