@@ -75,8 +75,8 @@ if __name__ == '__main__':
     # content_dataset.shape: (16980, 8000)
 
     logging.info('Loading ratings datasets')
-    ratings_training_dataset = data.load_cf_train_data(args.dataset, train_dataset_path)
-    ratings_test_dataset = data.load_cf_test_data(args.dataset, test_dataset_path)
+    ratings_training_dataset = data.load_cf_train_data(args.dataset, args.train_dataset_path)
+    ratings_test_dataset = data.load_cf_test_data(args.dataset, args.test_dataset_path)
 
     config = {
         'conf_a': args.conf_a,
