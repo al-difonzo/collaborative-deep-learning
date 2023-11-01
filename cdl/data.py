@@ -38,14 +38,12 @@ def load_content_embeddings(dataset_name, embedding=None, path=None, device=None
 def load_cf_train_data(dataset_name, path=None):
     if path is None: path = f'data/processed/{dataset_name}/cf-train-1.pt'
     mat = torch.load(path)
-    print(type(mat), mat.shape, type(mat[0]))
     return mat
 
 
 def load_cf_test_data(dataset_name, path=None):
     if path is None: path = f'data/processed/{dataset_name}/cf-test-1.pt'
     mat = torch.load(path)
-    print(type(mat), mat.shape, type(mat[0]))
     return mat
 
 
