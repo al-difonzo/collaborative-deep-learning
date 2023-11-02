@@ -29,4 +29,5 @@ class MatrixFactorizationModel:
         _, indices = torch.topk(self.estimate(), k)
         gathered = test.gather(1, indices)
         recall = gathered.sum(dim=1) / test.sum(dim=1)
-        return recall.mean()
+        # We use nanmean because there may be some users with 0 ratings in test set, thus test.sum(dim=1) may contain some 0s
+        return recall.nanmean()
