@@ -3,7 +3,7 @@ import sys
 import torch
 import pandas as pd
 from sentence_transformers import SentenceTransformer
-from cdl import data
+import constants
 
 def embed_and_save(content, path, check_for_nan=False):
     embeddings = model.encode(content, convert_to_tensor=True)
@@ -34,9 +34,9 @@ if __name__ == '__main__':
         content = lines[1::2]
         embed_and_save(content, f'data/processed/{dataset_name}/content-bert.pt')
 
-    elif dataset_name in data.AMZ_CHOICES_:
+    elif dataset_name in constants.AMZ_CHOICES_:
         df = pd.read_csv(f'data/raw/{dataset_name}/preprocessed_CF.csv')
-        for col in data.AMZ_EMBEDDED_COLS:
+        for col in constants.AMZ_EMBEDDED_COLS:
             df_col = df[col].fillna('')
             embed_and_save(df[col], f'data/processed/{dataset_name}/{col}_embedded_{ST_MODEL}.pt', check_for_nan=True)
 
