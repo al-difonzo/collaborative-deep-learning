@@ -23,6 +23,7 @@ def embed_and_save(content, path, check_for_nan=False):
 
 if __name__ == '__main__':
     dataset_name = sys.argv[1]
+    dataset_path = sys.argv[2]
     ST_MODEL = 'allenai-specter'
     model = SentenceTransformer(ST_MODEL)
 
@@ -38,7 +39,7 @@ if __name__ == '__main__':
         embed_and_save(content, f'data/processed/{dataset_name}/content-bert.pt')
 
     elif dataset_name in constants.AMZ_CHOICES_:
-        df = pd.read_csv(f'data/raw/{dataset_name}/preprocessed_CF.csv')
+        df = pd.read_csv(dataset_path)
         for col in constants.AMZ_EMBEDDED_COLS:
             df_col = df[col].fillna('')
             embed_and_save(df[col], f'data/processed/{dataset_name}/{col}_embedded_{ST_MODEL}.pt', check_for_nan=True)
