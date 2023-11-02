@@ -3,7 +3,9 @@ import sys
 import torch
 import pandas as pd
 from sentence_transformers import SentenceTransformer
-sys.path.append('..')
+import path
+directory = path.path(__file__).abspath()
+sys.path.append(directory.parent.parent)
 import constants
 
 def embed_and_save(content, path, check_for_nan=False):
