@@ -48,11 +48,11 @@ if __name__ == '__main__':
 
     elif dataset_name in constants.AMZ_CHOICES_:
         df = pd.read_csv(in_path)
-        df = df.iloc[:500,:]
+        df = df.iloc[:50,:]
         for col in constants.AMZ_EMBEDDED_COLS:
             df_col = df[col].fillna('')
             print(f'Embedding column {col}...')
-            if out_path is None: out_path = f'data/processed/{dataset_name}/{col}_embedded_{ST_MODEL}.pt'
-            embed_and_save(df_col, model, out_path, check_empty=True)
+            if out_path is None: path = f'data/processed/{dataset_name}/{col}_embedded_{ST_MODEL}.pt'
+            embed_and_save(df_col, model, path, check_empty=True)
 
 
