@@ -9,15 +9,17 @@ constants = SourceFileLoader("constants","cdl/constants.py").load_module()
 import constants
 import time
 
-def embed_and_save(content, path, check_for_nan=False):
+def embed_and_save(content, model, path, check_empty=False):
     start = time.time()
-    nan_mask = pd.isna(content)
-    if all(nan_mask): raise ValueError("Please provide an iterable with at least 1 non-empty element!")
-    embeddings = model.encode(content, convert_to_tensor=True)
-    if check_for_nan:
+    if any(pd.isna(content)): print("Warning: there are NaNs in input content!")
+    BATCH_SIZE = 16
+    embeddings = model.encode(content, convert_to_tensor=True, show_progress_bar=True, batch_size=BATCH_SIZE)
+    if check_empty:
         assert type(content)==pd.Series, f'Not applicable to {type(content)}'
-        mask_ = torch.tensor(nan_mask).unsqueeze(-1).expand(embeddings.size())
-        embeddings = embeddings.masked_fill_(mask_, 0)
+        empty_mask = content == ''
+        if any(empty_mask): 
+            mask_ = torch.tensor(empty_mask).unsqueeze(-1).expand(embeddings.size())
+            embeddings = embeddings.masked_fill_(mask_, 0)
     print('Elapsed time (seconds):', time.time() - start)
 
     print(f'Saving embeddings with size {embeddings.shape} to {path}')
@@ -48,8 +50,9 @@ if __name__ == '__main__':
         df = pd.read_csv(in_path)
         df = df.iloc[:500,:]
         for col in constants.AMZ_EMBEDDED_COLS:
+            df_col = df[col].fillna('')
             print(f'Embedding column {col}...')
             if out_path is None: out_path = f'data/processed/{dataset_name}/{col}_embedded_{ST_MODEL}.pt'
-            embed_and_save(df[col], out_path, check_for_nan=True)
+            embed_and_save(df_col, model, out_path, check_empty=True)
 
 
