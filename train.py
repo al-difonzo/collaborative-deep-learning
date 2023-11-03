@@ -9,6 +9,7 @@ from cdl import data
 from cdl.autoencoder import Autoencoder, StackedAutoencoder
 from cdl.cdl import train_model, train_stacked_autoencoder
 from cdl.mf import MatrixFactorizationModel
+from cdl import constants
 
 if __name__ == '__main__':
     sdae_activations = {
