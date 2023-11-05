@@ -12,7 +12,7 @@ import time
 def embed_and_save(content, model, path, check_empty=False):
     start = time.time()
     if any(pd.isna(content)): print("Warning: there are NaNs in input content!")
-    BATCH_SIZE = 16
+    BATCH_SIZE = 32
     embeddings = model.encode(content, convert_to_tensor=True, show_progress_bar=True, batch_size=BATCH_SIZE)
     if check_empty:
         assert type(content)==pd.Series, f'Not applicable to {type(content)}'
@@ -29,11 +29,17 @@ def embed_and_save(content, model, path, check_empty=False):
 
 
 if __name__ == '__main__':
-    dataset_name = sys.argv[1]
-    in_path = sys.argv[2] if len(sys.argv)>=3 else None
-    out_path = sys.argv[3] if len(sys.argv)>=4 else None
-    ST_MODEL = 'allenai-specter'
-    model = SentenceTransformer(ST_MODEL)
+    parser = argparse.ArgumentParser('Computing BERT embeddings with SentenceTransformer model')
+    parser.add_argument('--dataset', type=str, default='citeulike-a')
+    parser.add_argument('--in_path', type=str, default=None)
+    parser.add_argument('--out_path', type=str, default=None)
+    parser.add_argument('--st_model', type=str, default='allenai-specter')
+    # parser.add_argument('-v', '--verbose', action='store_true')
+    args = parser.parse_args()
+
+    dataset_name = args.dataset
+    model_name = args.st_model
+    model = SentenceTransformer(model_name)
 
     if dataset_name == 'citeulike-a':
         df = pd.read_csv(f'data/raw/{dataset_name}/raw-data.csv')
@@ -47,11 +53,12 @@ if __name__ == '__main__':
         embed_and_save(content, f'data/processed/{dataset_name}/content-bert.pt')
 
     elif dataset_name in constants.AMZ_CHOICES_:
-        df = pd.read_csv(in_path)
-        for col in constants.AMZ_EMBEDDED_COLS:
+        df = pd.read_csv(args.in_path)
+        for col in constants.AMZ_EMBEDDED_COLS[:1]:
             df_col = df[col].fillna('')
             print(f'Embedding column {col}...')
-            if out_path is None: path = f'data/processed/{dataset_name}/{col}_embedded_{ST_MODEL}.pt'
+            path = (f'data/processed/{dataset_name}/{col}_embedded_{model_name}.pt'
+                    if args.out_path is None else args.out_path)
             embed_and_save(df_col, model, path, check_empty=True)
 
 

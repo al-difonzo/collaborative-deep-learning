@@ -21,13 +21,13 @@ mkdir-citeulike-t:
 # 	python scripts/compute_openai.py amz-fashion $OPENAI_TOKEN
 
 bert-citeulike-a:
-	python scripts/compute_bert.py citeulike-a
+	python scripts/compute_bert.py --dataset citeulike-a
 
 bert-citeulike-t:
-	python scripts/compute_bert.py citeulike-t
+	python scripts/compute_bert.py --dataset citeulike-t
 
 # bert-amz-fashion:
-# 	python scripts/compute_bert.py amz-fashion
+# 	python scripts/compute_bert.py --dataset amz-fashion
 
 bow-citeulike-a:
 	python scripts/compute_bow.py citeulike-a
