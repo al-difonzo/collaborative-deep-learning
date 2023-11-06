@@ -27,7 +27,7 @@ bert-citeulike-t:
 	python scripts/compute_bert.py --dataset citeulike-t
 
 # bert-amz-fashion:
-# 	python scripts/compute_bert.py --dataset amz-fashion
+# 	python scripts/compute_bert.py --dataset amz-fashion --in_path data/preprocessed/amz-fashion.csv
 
 bow-citeulike-a:
 	python scripts/compute_bow.py citeulike-a
