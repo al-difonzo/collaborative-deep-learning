@@ -1,5 +1,6 @@
 import sys
 import os
+import argparse
 
 import torch
 import pandas as pd
@@ -13,19 +14,28 @@ import numpy as np
 from tqdm import tqdm
 
 def encode_and_embed_bert(content, model, path, check_empty=True):
-    # Tokenize the batch of texts and convert to input format expected by BERT
-    encoded_input = tokenizer(content, padding=True, truncation=True, return_tensors='pt').to(device)
-    # Compute token embeddings
-    with torch.no_grad():
-        model_output = model(**encoded_input)
-    # Take the mean of the token embeddings as the sentence embedding
-    embeddings = model_output.last_hidden_state.mean(dim=1).detach().cpu()
+    BATCH_SIZE = 16
+    embedding_list = []
+    for i in tqdm(range(0, len(content), BATCH_SIZE), desc="Encoding", unit="batch"):
+        batch_texts = content[i:i+BATCH_SIZE].tolist()
+        # Tokenize the batch of texts and convert to input format expected by BERT
+        encoded_input = tokenizer(batch_texts, padding=True, truncation=True, return_tensors='pt').to(device)
+        # Compute token embeddings
+        with torch.no_grad():
+            model_output = model(**encoded_input)
+        # Take the mean of the token embeddings as the sentence embedding
+        batch_embeddings = model_output.last_hidden_state.mean(dim=1).detach().cpu()
+        embedding_list.append(batch_embeddings)
     
-    print(f'Saving embeddings with size {embeddings.shape} to {path}...')
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    torch.save(embeddings, path)
+    # Concatenate all batch embeddings
+    all_embeddings = np.vstack(embedding_list)
 
-    return embeddings
+    
+    print(f'Saving embeddings with size {all_embeddings.shape} to {path}...')
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    torch.save(all_embeddings, path)
+
+    return all_embeddings
 
 def embed_and_save(content, model, path, check_empty=False):
     start = time.time()
@@ -57,6 +67,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     dataset_name = args.dataset
+    model_name = args.st_model if args.t_model is None else args.t_model
     if args.t_model is None:
         st_model = args.st_model
         model = SentenceTransformer(st_model)
@@ -84,19 +95,9 @@ if __name__ == '__main__':
         for col in constants.AMZ_EMBEDDED_COLS[:1]:
             df_col = df[col].fillna('')
             print(f'Embedding column {col}...')
-            path = (f'data/processed/{dataset_name}/{col}_embedded_{st_model}.pt'
+            path = (f'data/processed/{dataset_name}/{col}_embedded_{model_name}.pt'
                     if args.out_path is None else args.out_path)
             if args.t_model is None:
                 embeddings = embed_and_save(df_col, model, path, check_empty=True)
             else:
                 embeddings = encode_and_embed_bert(df['fullReview'], model, path)
-
-# embedding_list = []
-# for i in tqdm(range(0, len(df['fullReview']), BATCH_SIZE), desc="Encoding", unit="batch"):
-#     batch_texts = df['fullReview'][i:i+BATCH_SIZE].tolist()
-#     batch_embeddings = encode_batch_to_bert_embedding(batch_texts)
-#     embedding_list.append(batch_embeddings)
- 
-# # Concatenate all batch embeddings
-# all_embeddings = np.vstack(embedding_list)
-# all_embeddings.shape
