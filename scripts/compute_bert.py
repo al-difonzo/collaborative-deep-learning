@@ -41,7 +41,7 @@ def embed_and_save(content, model, path, check_empty=False):
     start = time.time()
     if any(pd.isna(content)): print("Warning: there are NaNs in input content!")
     BATCH_SIZE = 32
-    embeddings = model.encode(content, convert_to_tensor=True, show_progress_bar=True, BATCH_SIZE=BATCH_SIZE)
+    embeddings = model.encode(content, convert_to_tensor=True, show_progress_bar=True, batch_size=BATCH_SIZE)
     if check_empty:
         assert type(content)==pd.Series, f'Not applicable to {type(content)}'
         empty_mask = content == ''
