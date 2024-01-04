@@ -1,3 +1,12 @@
+'''
+Standalone usage:
+python scripts/compute_bert.py --dataset <dataset_name> --st_model <st_model>
+
+Example:
+# pip install typing_extensions==4.4.0 && python -c "import typing_extensions; from importlib import reload; reload(typing_extensions)" # uncomment if necessary
+python scripts/compute_bert.py --dataset ml-lat-small --st_model 'all-MiniLM-L6-v2'
+'''
+
 import sys
 import os
 import argparse
@@ -7,6 +16,7 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from importlib.machinery import SourceFileLoader
 constants = SourceFileLoader("constants","cdl/constants.py").load_module()
+movielens = SourceFileLoader("movielens","scripts/movielens.py").load_module()
 # import constants
 import time
 from transformers import BertTokenizer, BertModel
@@ -93,6 +103,20 @@ if __name__ == '__main__':
     elif dataset_name in constants.AMZ_CHOICES_:
         df = pd.read_csv(args.in_path)
         for col in constants.AMZ_EMBEDDED_COLS[:1]:
+            df_col = df[col].fillna('')
+            print(f'Embedding column {col}...')
+            path = (f'data/processed/{dataset_name}/{col}_embedded_{model_name}.pt'
+                    if args.out_path is None else args.out_path)
+            if args.t_model is None:
+                embeddings = embed_and_save(df_col, model, path, check_empty=True)
+            else:
+                embeddings = encode_and_embed_bert(df['fullReview'], model, path)
+
+    elif dataset_name in constants.MOVIELENS_CHOICES:
+        # df = movielens.get_movielens_dataset(constants.MOVIELENS_CHOICES[dataset_name])
+        # df = movielens.enrich_movielens(df, output_path=f'{constants.MOVIELENS_CHOICES[dataset_name]}_with_tmdbinfo.csv')
+        df = pd.read_csv(args.in_path)
+        for col in constants.MOVIELENS_CHOICES[dataset_name]['cols_to_embed']:
             df_col = df[col].fillna('')
             print(f'Embedding column {col}...')
             path = (f'data/processed/{dataset_name}/{col}_embedded_{model_name}.pt'
