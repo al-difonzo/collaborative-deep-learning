@@ -37,7 +37,7 @@ AMZ_CHOICES_ = [name.replace(',','').replace(' and ','_').replace(' ','_') for n
 # 'source_zip': zip name as reported at https://grouplens.org/datasets/movielens/
 # 'UIMat_file': path of file containing User-Item Matrix after extracting zip contents
 MOVIELENS_CHOICES = {
-    'ml-lat-small': {
+    'ml-latest-small': {
         'source_zip': 'ml-latest-small.zip',
         'UIMat_file': 'ml-latest-small/ratings.csv',
         'cols_to_embed': ['combined_info'],
