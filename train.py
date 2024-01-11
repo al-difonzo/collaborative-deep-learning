@@ -73,10 +73,11 @@ if __name__ == '__main__':
     logging.info(f'Loading content dataset ({args.embedding})')
     content_dataset = data.load_content_embeddings(args.dataset, args.embedding, args.embedding_path, device=device)
     num_items, in_features = content_dataset.shape
-    # content_dataset.shape: (16980, 8000)
+    print('content_dataset.shape:', content_dataset.shape)
 
     logging.info('Loading ratings datasets')
     ratings_training_dataset = data.load_cf_train_data(args.dataset, args.train_dataset_path)
+    print('ratings_training_dataset.size():', ratings_training_dataset.size())
     ratings_test_dataset = data.load_cf_test_data(args.dataset, args.test_dataset_path)
 
     config = {

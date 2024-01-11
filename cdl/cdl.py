@@ -39,7 +39,7 @@ def train_model(sdae, mfm, content, ratings, optimizer, recon_loss_fn, config, e
             latent_items_target, recon = sdae(content)
             latent_items_target = latent_items_target.cpu()
             sdae.train()
-
+        print('latent_items_target.size():', latent_items_target.size())
         mfm_optim.step(latent_items_target)
 
         if epoch % 3 == 0:
