@@ -31,6 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='citeulike-a')
     parser.add_argument('--train_dataset_path', type=str, default=None)
     parser.add_argument('--test_dataset_path', type=str, default=None)
+    parser.add_argument('--user_rec_path', type=str, default=None)
     parser.add_argument('--recall', type=int, default=300)
     parser.add_argument('--out', default='model.pt')
 
@@ -119,6 +120,11 @@ if __name__ == '__main__':
 
     logging.info(f'Saving model to {args.out}')
     data.save_model(sdae, mfm, args.out)
+
+    if args.user_rec_path is None: args.user_rec_path = f'{args.dataset}_{args.embedding}_user_recommendations_{args.recall}.csv'
+    logging.info(f'Saving user recommendations to {args.user_rec_path}')
+    user_rec_df = mfm.get_user_recommendations(ratings_test_dataset.to_dense(), args.recall)
+    user_rec_df.to_csv(args.user_rec_path)
 
     logging.info(f'Calculating recall@{args.recall}')
     recall = mfm.compute_recall(ratings_test_dataset.to_dense(), args.recall)

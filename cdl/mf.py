@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-
+import pandas as pd
 
 class MatrixFactorizationModel:
     def __init__(self, target_shape, latent_size):
@@ -24,6 +24,15 @@ class MatrixFactorizationModel:
         self.V = d['V']
         assert self.U.shape[1] == self.V.shape[1]
         self.latent_size = self.U.shape[1]
+
+    def get_user_recommendations(self, test, k):
+        scores, indices = torch.topk(self.estimate(), k)
+        gathered = test.gather(1, indices)
+        data = {'itemIds': gathered.tolist()}
+        user_rec_df = pd.DataFrame(data, columns=['itemIds'])
+        user_rec_df['scores'] = scores.tolist()
+        user_rec_df.index.name = 'userId'
+        return user_rec_df
 
     def compute_recall(self, test, k):
         _, indices = torch.topk(self.estimate(), k)
