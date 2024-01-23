@@ -27,8 +27,7 @@ class MatrixFactorizationModel:
 
     def get_user_recommendations(self, test, k):
         scores, indices = torch.topk(self.estimate(), k)
-        gathered = test.gather(1, indices)
-        data = {'itemIds': gathered.tolist()}
+        data = {'itemIds': indices.tolist()}
         user_rec_df = pd.DataFrame(data, columns=['itemIds'])
         user_rec_df['scores'] = scores.tolist()
         user_rec_df.index.name = 'userId'
