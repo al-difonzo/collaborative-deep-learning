@@ -4,7 +4,7 @@ python scripts/compute_bert.py --dataset <dataset_name> --st_model <st_model>
 
 Example:
 # pip install typing_extensions==4.4.0 && python -c "import typing_extensions; from importlib import reload; reload(typing_extensions)" # uncomment if necessary
-python scripts/compute_bert.py --dataset ml-lat-small --st_model 'all-MiniLM-L6-v2'
+python scripts/compute_bert.py --dataset ml-latest-small --st_model 'all-MiniLM-L6-v2'
 '''
 
 import sys
@@ -73,7 +73,6 @@ if __name__ == '__main__':
     parser.add_argument('--out_path', type=str, default=None)
     parser.add_argument('--st_model', type=str, default='allenai-specter')
     parser.add_argument('--t_model', type=str, default=None) # 'bert-base-uncased'
-    # parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
 
     dataset_name = args.dataset

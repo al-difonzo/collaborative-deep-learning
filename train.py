@@ -74,11 +74,11 @@ if __name__ == '__main__':
     logging.info(f'Loading content dataset ({args.embedding})')
     content_dataset = data.load_content_embeddings(args.dataset, args.embedding, args.embedding_path, device=device)
     num_items, in_features = content_dataset.shape
-    print('content_dataset.shape:', content_dataset.shape)
+    logging.info(f'Number of items: {num_items}, Number of item features: {in_features}')
 
     logging.info('Loading ratings datasets')
     ratings_training_dataset = data.load_cf_train_data(args.dataset, args.train_dataset_path)
-    print('ratings_training_dataset.size():', ratings_training_dataset.size())
+    logging.info(f'Size of ratings_training_dataset: {ratings_training_dataset.size()}')
     ratings_test_dataset = data.load_cf_test_data(args.dataset, args.test_dataset_path)
 
     config = {
@@ -129,4 +129,4 @@ if __name__ == '__main__':
     logging.info(f'Calculating recall@{args.topk}')
     recall = mfm.compute_recall(ratings_test_dataset.to_dense(), args.topk)
 
-    print(f'recall@{args.topk}: {recall.item()}')
+    logging.info(f'Recall@{args.topk}: {recall.item()}')
