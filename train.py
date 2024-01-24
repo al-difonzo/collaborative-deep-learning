@@ -9,6 +9,7 @@ from cdl import data
 from cdl.autoencoder import Autoencoder, StackedAutoencoder
 from cdl.cdl import train_model, train_stacked_autoencoder
 from cdl.mf import MatrixFactorizationModel
+from cdl import constants
 
 if __name__ == '__main__':
     sdae_activations = {
@@ -25,9 +26,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('Collaborative Deep Learning training')
     parser.add_argument('--seed', type=int, default=1)
 
-    parser.add_argument('--embedding', choices=['bert', 'bow'], default='bert')
-    parser.add_argument('--dataset', choices=['citeulike-a', 'citeulike-t'], default='citeulike-a')
-    parser.add_argument('--recall', type=int, default=300)
+    parser.add_argument('--embedding', choices=['bert', 'bow'], default=None)
+    parser.add_argument('--embedding_path', type=str, default=None)
+    parser.add_argument('--dataset', type=str, default='citeulike-a')
+    parser.add_argument('--train_dataset_path', type=str, default=None)
+    parser.add_argument('--test_dataset_path', type=str, default=None)
+    parser.add_argument('--user_rec_path', type=str, default=None)
+    parser.add_argument('--topk', type=int, default=300)
     parser.add_argument('--out', default='model.pt')
 
     parser.add_argument('--conf_a', type=float, default=1.0)
@@ -67,13 +72,14 @@ if __name__ == '__main__':
     logging.info(f'Using device {device}')
 
     logging.info(f'Loading content dataset ({args.embedding})')
-    content_dataset = data.load_content_embeddings(args.dataset, args.embedding, device=device)
+    content_dataset = data.load_content_embeddings(args.dataset, args.embedding, args.embedding_path, device=device)
     num_items, in_features = content_dataset.shape
-    # content_dataset.shape: (16980, 8000)
+    logging.info(f'Number of items: {num_items}, Number of item features: {in_features}')
 
     logging.info('Loading ratings datasets')
-    ratings_training_dataset = data.load_cf_train_data(args.dataset)
-    ratings_test_dataset = data.load_cf_test_data(args.dataset)
+    ratings_training_dataset = data.load_cf_train_data(args.dataset, args.train_dataset_path)
+    logging.info(f'Size of ratings_training_dataset: {ratings_training_dataset.size()}')
+    ratings_test_dataset = data.load_cf_test_data(args.dataset, args.test_dataset_path)
 
     config = {
         'conf_a': args.conf_a,
@@ -115,7 +121,12 @@ if __name__ == '__main__':
     logging.info(f'Saving model to {args.out}')
     data.save_model(sdae, mfm, args.out)
 
-    logging.info(f'Calculating recall@{args.recall}')
-    recall = mfm.compute_recall(ratings_test_dataset.to_dense(), args.recall)
+    if args.user_rec_path is None: args.user_rec_path = f'{args.dataset}_{args.embedding}_user_recommendations_{args.topk}.csv'
+    logging.info(f'Saving user recommendations to {args.user_rec_path}')
+    user_rec_df = mfm.get_user_recommendations(ratings_test_dataset.to_dense(), args.topk)
+    user_rec_df.to_csv(args.user_rec_path)
 
-    print(f'recall@{args.recall}: {recall.item()}')
+    logging.info(f'Calculating recall@{args.topk}')
+    recall = mfm.compute_recall(ratings_test_dataset.to_dense(), args.topk)
+
+    logging.info(f'Recall@{args.topk}: {recall.item()}')

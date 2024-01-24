@@ -23,21 +23,28 @@ def bernoulli_corrupt(x, p):
     return x * mask
 
 
-def load_content_embeddings(dataset_name, embedding, device=None):
-    x = torch.load(f'data/processed/{dataset_name}/content-{embedding}.pt', map_location=device)
-
+def load_content_embeddings(dataset_name, embedding=None, path=None, device=None):
+    if embedding is None and path is None: 
+        raise Exception('Please specify either embedding model with --embedding,' 
+        'or custom path of precomputed embeddings with --embedding_path')
+    if path is None: path = f'data/processed/{dataset_name}/content-{embedding}.pt'
+    # Make sure dtype of loaded embeddings is float32, because it will be used by default for weight matrix
+    x = torch.load(path, map_location=device).to(torch.float32)
     if x.is_sparse:
         x = x.to_dense()
-
     return x
 
 
-def load_cf_train_data(dataset_name):
-    return torch.load(f'data/processed/{dataset_name}/cf-train-1.pt')
+def load_cf_train_data(dataset_name, path=None):
+    if path is None: path = f'data/processed/{dataset_name}/cf-train-1.pt'
+    mat = torch.load(path)
+    return mat
 
 
-def load_cf_test_data(dataset_name):
-    return torch.load(f'data/processed/{dataset_name}/cf-test-1.pt')
+def load_cf_test_data(dataset_name, path=None):
+    if path is None: path = f'data/processed/{dataset_name}/cf-test-1.pt'
+    mat = torch.load(path)
+    return mat
 
 
 def save_model(sdae, mfm, filename):

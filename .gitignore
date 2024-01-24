@@ -1,7 +1,8 @@
 .idea/
 __pycache__/
 venv/
-*.pt
+// *.pt
 .DS_Store
 .ipynb_checkpoints/
 data/processed
+data/preprocessed
