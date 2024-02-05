@@ -145,7 +145,7 @@ if __name__ == '__main__':
         # # Print the best hyperparameters
         # best_params = study.best_params
         # print("Best Hyperparameters:", best_params)
-        study = optuna_hyper.optimize(n_trials=2, study_name=f'CDL_{time.time()}')
+        study = optuna_hyper.optimize(n_trials=2, study_name=f'CDL_{int(time.time())}')
 
         logging.info(f'Saving model to {args.out}')
     else:
