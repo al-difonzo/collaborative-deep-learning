@@ -30,6 +30,12 @@ class OptunaWrapper:
 
     def objective(self, trial):
         config = self.get_hyper_combo(trial)
+        config.update({ # non-hyper parameters
+            'conf_a': args.conf_a,
+            'conf_b': args.conf_b,
+            'dropout': args.dropout,
+            'corruption': args.corruption,
+        })
         logging.info(f'Config: {config}')
         
         optimizer = torch.optim.AdamW(self.sdae.parameters(), lr=self.args.lr, weight_decay=config['lambda_w'])
