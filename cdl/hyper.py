@@ -31,7 +31,7 @@ class OptunaWrapper:
         config = self.get_hyper_combo(trial)
         logging.info(f'Config: {config}')
         
-        optimizer = torch.optim.AdamW(self.sdae.parameters(), lr=config['lr'], weight_decay=config['lambda_w'])
+        optimizer = torch.optim.AdamW(self.sdae.parameters(), lr=self.args.lr, weight_decay=config['lambda_w'])
 
         content_training_dataset = data.random_subset(self.content_data, int(self.num_items * 0.75))
 
