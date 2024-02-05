@@ -42,7 +42,8 @@ class OptunaWrapper:
 
         content_training_dataset = data.random_subset(self.content_data, int(self.num_items * 0.75))
 
-        EPOCHS = trial.suggest_int('epochs', 5, 20)
+        # EPOCHS = trial.suggest_int('epochs', 5, 20)
+        EPOCHS = trial.suggest_int('epochs', 2)
         
         logging.info(f'Pretraining SDAE with {self.args.recon_loss} loss for {EPOCHS} epochs')
         cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, EPOCHS, self.args.batch_size, self.recon_loss_fn, optimizer)
