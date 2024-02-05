@@ -80,6 +80,16 @@ if __name__ == '__main__':
     ratings_test_dataset = data.load_cf_test_data(args.dataset, args.test_dataset_path)
     logging.info(f'Size of ratings_test_dataset: {ratings_test_dataset.size()}')
 
+    config = {
+        'conf_a': args.conf_a,
+        'conf_b': args.conf_b,
+        'lambda_u': args.lambda_u,
+        'lambda_v': args.lambda_v,
+        'lambda_w': args.lambda_w,
+        'lambda_n': args.lambda_n,
+        'dropout': args.dropout,
+        'corruption': args.corruption,
+    }
 
     recon_loss_fn = constants.RECON_LOSSES[args.recon_loss]
     activation = constants.SDAE_ACTIVATIONS[args.activation]
