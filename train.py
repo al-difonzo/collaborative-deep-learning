@@ -8,63 +8,53 @@ import torch.optim as optim
 import optuna
 import time
 
-# Define objective function for Optuna to minimize
-def objective(trial, args, sdae, mfm, train_data, valid_data, content_dataset, device):
-    recon_loss_fn = recon_losses[args.recon_loss]
-    activation = sdae_activations[args.activation]
-    config = {
-        'conf_a': args.conf_a,
-        'conf_b': args.conf_b,
-        'lambda_u': trial.suggest_float("lambda_u", 1e-2, 1e4, log=True),
-        'lambda_v': trial.suggest_float("lambda_v", 1e-2, 1e4, log=True),
-        'lambda_w': trial.suggest_float("lambda_w", 1e-2, 1e4, log=True),
-        'lambda_n': trial.suggest_float("lambda_n", 1e-2, 1e4, log=True),
-        'dropout': args.dropout,
-        'corruption': args.corruption,
-    }
-    logging.info(f'Config: {config}')
-    optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=config.lambda_w)
-
-    content_training_dataset = data.random_subset(content_dataset, int(num_items * 0.8))
-
-    logging.info(f'Pretraining SDAE with {args.recon_loss} loss')
-    train_stacked_autoencoder(sdae, content_training_dataset, args.corruption, args.pretrain_epochs, args.batch_size, recon_loss_fn, optimizer)
-
-    for epoch in range(trial.suggest_int('epochs', 5, 20)):
-        # Train the model
-        logging.info(f'Training with recon loss {args.recon_loss}')
-        train_model(sdae, mfm, content_dataset, train_data, optimizer, recon_loss_fn, config, epochs=args.epochs, batch_size=args.batch_size, device=device)
-        # Evaluate the model on the validation set
-        recall = mfm.compute_recall(valid_data.to_dense(), args.topk)
-
-        trial.report(recall, epoch)
-
-        # Handle pruning based on the intermediate value.
-        if trial.should_prune():
-            raise optuna.exceptions.TrialPruned()
-
-
-    return 1 - recall  # Optuna minimizes the objective function, and for recall, higher is better
-
-
 from cdl import data
 from cdl.autoencoder import Autoencoder, StackedAutoencoder
 from cdl.cdl import train_model, train_stacked_autoencoder
 from cdl.mf import MatrixFactorizationModel
 from cdl import constants
+from cdl import hyper
+
+# # Define objective function for Optuna to minimize
+# def objective(trial, args, sdae, mfm, train_data, valid_data, content_dataset, device):
+#     recon_loss_fn = constants.RECON_LOSSES[args.recon_loss]
+#     activation = constants.SDAE_ACTIVATIONS[args.activation]
+#     config = {
+#         'conf_a': args.conf_a,
+#         'conf_b': args.conf_b,
+#         'lambda_u': trial.suggest_float("lambda_u", 1e-2, 1e4, log=True),
+#         'lambda_v': trial.suggest_float("lambda_v", 1e-2, 1e4, log=True),
+#         'lambda_w': trial.suggest_float("lambda_w", 1e-2, 1e4, log=True),
+#         'lambda_n': trial.suggest_float("lambda_n", 1e-2, 1e4, log=True),
+#         'dropout': args.dropout,
+#         'corruption': args.corruption,
+#     }
+#     logging.info(f'Config: {config}')
+#     optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=config.lambda_w)
+
+#     content_training_dataset = data.random_subset(content_dataset, int(num_items * 0.8))
+
+#     logging.info(f'Pretraining SDAE with {args.recon_loss} loss')
+#     train_stacked_autoencoder(sdae, content_training_dataset, args.corruption, args.pretrain_epochs, args.batch_size, recon_loss_fn, optimizer)
+
+#     for epoch in range(trial.suggest_int('epochs', 5, 20)):
+#         # Train the model
+#         logging.info(f'Training with recon loss {args.recon_loss}')
+#         train_model(sdae, mfm, content_dataset, train_data, optimizer, recon_loss_fn, config, epochs=args.epochs, batch_size=args.batch_size, device=device)
+#         # Evaluate the model on the validation set
+#         recall = mfm.compute_recall(valid_data.to_dense(), args.topk)
+
+#         trial.report(recall, epoch)
+
+#         # Handle pruning based on the intermediate value.
+#         if trial.should_prune():
+#             raise optuna.exceptions.TrialPruned()
+
+
+#     return 1 - recall  # Optuna minimizes the objective function, and for recall, higher is better
+
 
 if __name__ == '__main__':
-    sdae_activations = {
-        'relu': nn.ReLU(),
-        'sigmoid': nn.Sigmoid(),
-        'tanh': nn.Tanh(),
-    }
-
-    recon_losses = {
-        'mse': nn.MSELoss(),
-        'cross-entropy': nn.BCEWithLogitsLoss(),
-    }
-
     parser = argparse.ArgumentParser('Collaborative Deep Learning training')
     parser.add_argument('--seed', type=int, default=1)
 
@@ -91,14 +81,14 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=150)
 
     # SDAE hyperparameters
-    parser.add_argument('--activation', choices=sdae_activations.keys(), default='sigmoid')
+    parser.add_argument('--activation', choices=constants.SDAE_ACTIVATIONS.keys(), default='sigmoid')
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--corruption', type=float, default=0.3)
     parser.add_argument('--dropout', type=float, default=0.1)
     parser.add_argument('--hidden_sizes', nargs='*', type=int, default=[200])
     parser.add_argument('--latent_size', type=int, default=50)
     parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--recon_loss', choices=recon_losses.keys(), default='mse')
+    parser.add_argument('--recon_loss', choices=constants.RECON_LOSSES.keys(), default='mse')
 
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
@@ -128,30 +118,9 @@ if __name__ == '__main__':
     ratings_test_dataset = data.load_cf_test_data(args.dataset, args.test_dataset_path)
     logging.info(f'Size of ratings_test_dataset: {ratings_test_dataset.size()}')
 
-    config = {
-        'conf_a': args.conf_a,
-        'conf_b': args.conf_b,
-        'lambda_u': args.lambda_u,
-        'lambda_v': args.lambda_v,
-        'lambda_w': args.lambda_w,
-        'lambda_n': args.lambda_n,
-        'dropout': args.dropout,
-        'corruption': args.corruption,
-    }
 
-    if args.optuna:
-        # Create an Optuna study
-        study = optuna.create_study(study_name=f'CDL_{time.time()}', direction='minimize')
-
-        # Perform optimization
-        study.optimize(objective, n_trials=10)  # Adjust the number of trials
-
-        # Print the best hyperparameters
-        best_params = study.best_params
-        print("Best Hyperparameters:", best_params)
-
-    recon_loss_fn = recon_losses[args.recon_loss]
-    activation = sdae_activations[args.activation]
+    recon_loss_fn = constants.RECON_LOSSES[args.recon_loss]
+    activation = constants.SDAE_ACTIVATIONS[args.activation]
 
     layer_sizes = [in_features] + args.hidden_sizes + [args.latent_size]
     logging.info(f'Using autoencoder architecture {"x".join(map(str, layer_sizes))}')
@@ -164,20 +133,34 @@ if __name__ == '__main__':
     sdae.to(device)
 
     mfm = MatrixFactorizationModel(target_shape=ratings_training_dataset.shape, latent_size=args.latent_size)
+    if args.optuna:
+        optuna_hyper = hyper.OptunaWrapper(args, sdae, mfm, 
+                            ratings_training_dataset, ratings_valid_dataset, content_dataset, 
+                            recon_loss_fn, activation)
+        # # Create an Optuna study
+        # study = optuna.create_study(study_name=f'CDL_{time.time()}', direction='minimize')
+        # # Perform optimization
+        # study.optimize(optuna_hyper.objective, n_trials=10)  # Adjust the number of trials
 
-    logging.info(f'Config: {config}')
-    optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=args.lambda_w)
+        # # Print the best hyperparameters
+        # best_params = study.best_params
+        # print("Best Hyperparameters:", best_params)
+        study = optuna_hyper.optimize(n_trials=2, study_name=f'CDL_{time.time()}')
 
-    content_training_dataset = data.random_subset(content_dataset, int(num_items * 0.8))
+        logging.info(f'Saving model to {args.out}')
+    else:
+        optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=args.lambda_w)
 
-    logging.info(f'Pretraining SDAE with {args.recon_loss} loss')
-    train_stacked_autoencoder(sdae, content_training_dataset, args.corruption, args.pretrain_epochs, args.batch_size, recon_loss_fn, optimizer)
+        content_training_dataset = data.random_subset(content_dataset, int(num_items * 0.8))
 
-    logging.info(f'Training with recon loss {args.recon_loss}')
-    train_model(sdae, mfm, content_dataset, ratings_training_dataset, optimizer, recon_loss_fn, config, epochs=args.epochs, batch_size=args.batch_size, device=device)
+        logging.info(f'Pretraining SDAE with {args.recon_loss} loss')
+        train_stacked_autoencoder(sdae, content_training_dataset, args.corruption, args.pretrain_epochs, args.batch_size, recon_loss_fn, optimizer)
 
-    logging.info(f'Saving model to {args.out}')
-    data.save_model(sdae, mfm, args.out)
+        logging.info(f'Training with recon loss {args.recon_loss}')
+        train_model(sdae, mfm, content_dataset, ratings_training_dataset, optimizer, recon_loss_fn, config, epochs=args.epochs, batch_size=args.batch_size, device=device)
+
+        logging.info(f'Saving model to {args.out}')
+        data.save_model(sdae, mfm, args.out)
 
     if args.user_rec_path is None: args.user_rec_path = f'{args.dataset}_{args.embedding}_user_recommendations_{args.topk}.csv'
     logging.info(f'Saving user recommendations to {args.user_rec_path}')
