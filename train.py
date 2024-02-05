@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 import optuna
+import time
 
 # Define objective function for Optuna to minimize
 def objective(trial, args, sdae, mfm, train_data, valid_data, content_dataset, device):
@@ -14,10 +15,10 @@ def objective(trial, args, sdae, mfm, train_data, valid_data, content_dataset, d
     config = {
         'conf_a': args.conf_a,
         'conf_b': args.conf_b,
-        'lambda_u': trial.suggest_float("lambda_u", 1e-2, 1e4, log=True))
-        'lambda_v': trial.suggest_float("lambda_v", 1e-2, 1e4, log=True))
-        'lambda_w': trial.suggest_float("lambda_w", 1e-2, 1e4, log=True))
-        'lambda_n': trial.suggest_float("lambda_n", 1e-2, 1e4, log=True))
+        'lambda_u': trial.suggest_float("lambda_u", 1e-2, 1e4, log=True),
+        'lambda_v': trial.suggest_float("lambda_v", 1e-2, 1e4, log=True),
+        'lambda_w': trial.suggest_float("lambda_w", 1e-2, 1e4, log=True),
+        'lambda_n': trial.suggest_float("lambda_n", 1e-2, 1e4, log=True),
         'dropout': args.dropout,
         'corruption': args.corruption,
     }
@@ -140,7 +141,7 @@ if __name__ == '__main__':
 
     if args.optuna:
         # Create an Optuna study
-        study = optuna.create_study(direction='minimize')
+        study = optuna.create_study(study_name=f'CDL_{time.time()}', direction='minimize')
 
         # Perform optimization
         study.optimize(objective, n_trials=10)  # Adjust the number of trials
