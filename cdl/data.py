@@ -40,6 +40,10 @@ def load_cf_train_data(dataset_name, path=None):
     mat = torch.load(path)
     return mat
 
+def load_cf_valid_data(dataset_name, path=None):
+    if path is None: path = f'data/processed/{dataset_name}/cf-valid-1.pt'
+    mat = torch.load(path)
+    return mat
 
 def load_cf_test_data(dataset_name, path=None):
     if path is None: path = f'data/processed/{dataset_name}/cf-test-1.pt'
