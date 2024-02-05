@@ -2,6 +2,7 @@ from cdl import data
 from cdl import constants
 import logging
 import torch
+import optuna
 
 class OptunaWrapper:
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
