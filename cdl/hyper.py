@@ -6,7 +6,6 @@ import torch
 import optuna
 
 class OptunaWrapper:
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     def __init__(self, args, sdae, mfm, train_data, valid_data, content_data, recon_loss_fn, activation):
         self.args = args
@@ -19,6 +18,7 @@ class OptunaWrapper:
 
         self.recon_loss_fn = constants.RECON_LOSSES[args.recon_loss]
         self.activation = constants.SDAE_ACTIVATIONS[args.activation]
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def get_hyper_combo(self, trial):
         return {
