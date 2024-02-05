@@ -61,10 +61,3 @@ class OptunaWrapper:
         logging.info("Best Hyperparameters:", best_params)
         
         return study
-
-# Create a sample dataset
-X, y = make_classification(n_samples=1000, n_features=20, random_state=42)
-X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Create an instance of the OptunaWrapper
-wrapper = OptunaWrapper(X_train, y_train, input_size=X_train.shape[1], output_size=1)
