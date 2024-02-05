@@ -39,10 +39,11 @@ class OptunaWrapper:
         logging.info(f'Pretraining SDAE with {self.args.recon_loss} loss')
         cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, self.args.pretrain_epochs, self.args.batch_size, self.recon_loss_fn, optimizer)
 
-        for epoch in range(trial.suggest_int('epochs', 5, 20)):
+        EPOCHS = trial.suggest_int('epochs', 5, 20)
+        for epoch in range(EPOCHS):
             # Train the model
             logging.info(f'Training with recon loss {self.args.recon_loss}')
-            cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=self.args.epochs, batch_size=self.args.batch_size, device=device)
+            cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=EPOCHS, batch_size=self.args.batch_size, device=device)
             # Evaluate the model on the validation set
             recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk)
 
