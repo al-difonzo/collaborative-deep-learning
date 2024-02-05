@@ -1,4 +1,5 @@
 from cdl import data
+from cdl import cdl
 from cdl import constants
 import logging
 import torch
@@ -36,12 +37,12 @@ class OptunaWrapper:
         content_training_dataset = data.random_subset(self.content_data, int(self.num_items * 0.75))
 
         logging.info(f'Pretraining SDAE with {self.args.recon_loss} loss')
-        train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, self.args.pretrain_epochs, self.args.batch_size, self.recon_loss_fn, optimizer)
+        cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, self.args.pretrain_epochs, self.args.batch_size, self.recon_loss_fn, optimizer)
 
         for epoch in range(trial.suggest_int('epochs', 5, 20)):
             # Train the model
             logging.info(f'Training with recon loss {self.args.recon_loss}')
-            train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=self.args.epochs, batch_size=self.args.batch_size, device=device)
+            cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=self.args.epochs, batch_size=self.args.batch_size, device=device)
             # Evaluate the model on the validation set
             recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk)
 
