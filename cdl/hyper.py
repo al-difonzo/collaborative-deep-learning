@@ -31,10 +31,10 @@ class OptunaWrapper:
     def objective(self, trial):
         config = self.get_hyper_combo(trial)
         config.update({ # non-hyper parameters
-            'conf_a': args.conf_a,
-            'conf_b': args.conf_b,
-            'dropout': args.dropout,
-            'corruption': args.corruption,
+            'conf_a': self.args.conf_a,
+            'conf_b': self.args.conf_b,
+            'dropout': self.args.dropout,
+            'corruption': self.args.corruption,
         })
         logging.info(f'Config: {config}')
         
