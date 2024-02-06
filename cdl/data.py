@@ -65,4 +65,4 @@ def load_model(sdae, mfm, filename):
         sdae.load_state_dict(d['autoencoder'])
 
     if mfm is not None:
-        mfm.load_state_dict(d['matrix_factorization_model'])
+        mfm.update_state_dict(d['matrix_factorization_model'])
