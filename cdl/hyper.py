@@ -42,11 +42,11 @@ class OptunaWrapper:
 
         content_training_dataset = data.random_subset(self.content_data, int(self.num_items * 0.75))
         
+        # EPOCHS = trial.suggest_int('epochs', 5, 20)
+        EPOCHS = 2
         logging.info(f'Pretraining SDAE with {self.args.recon_loss} loss for {EPOCHS} epochs')
         cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, EPOCHS, self.args.batch_size, self.recon_loss_fn, optimizer)
         
-        # EPOCHS = trial.suggest_int('epochs', 5, 20)
-        EPOCHS = 2
         # Train the model
         cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device)
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk)
