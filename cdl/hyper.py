@@ -50,7 +50,12 @@ class OptunaWrapper:
         # Train the model
         cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device)
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk)
-        trial.report(recall, 0)
+        # trial.report(recall, 0)
+        trial.set_user_attr("recall", recall)
+        trial.set_user_attr("model", {
+            'autoencoder': self.sdae.state_dict(),
+            'matrix_factorization_model': self.mfm.state_dict(),
+        })
         
         # for epoch in range(EPOCHS):
         #     logging.info(f'Training with recon loss {self.args.recon_loss}')
@@ -80,8 +85,6 @@ class OptunaWrapper:
         print("  Params: ")
         for key, value in trial.params.items():
             print("    {}: {}".format(key, value))
-        # # Print the best hyperparameters
-        # best_params = study.best_params
         # logging.info("Best Hyperparameters:", best_params)
         
         return study

@@ -121,7 +121,10 @@ if __name__ == '__main__':
         # print("Best Hyperparameters:", best_params)
         study = optuna_hyper.optimize(n_trials=2, study_name=f'CDL_{int(time.time())}')
 
-        logging.info(f'Saving model to {args.out}')
+        logging.info(f'Saving best model to {args.out}')
+        data.save_model(study.best_trial.user_attrs['sdae'], 
+                        study.best_trial.user_attrs['mfm'],
+                        args.out)
     else:
         optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=args.lambda_w)
 
@@ -136,6 +139,9 @@ if __name__ == '__main__':
         logging.info(f'Saving model to {args.out}')
         data.save_model(sdae, mfm, args.out)
 
+    logging.info(f'Loading trained model from {args.out}')
+    data.load_model(sdae, mfm, args.out)
+    
     if args.user_rec_path is None: args.user_rec_path = f'{args.dataset}_{args.embedding}_user_recommendations_{args.topk}.csv'
     logging.info(f'Saving user recommendations to {args.user_rec_path}')
     user_rec_df = mfm.get_user_recommendations(ratings_test_dataset.to_dense(), args.topk)
@@ -144,5 +150,4 @@ if __name__ == '__main__':
 
     logging.info(f'Calculating recall@{args.topk}')
     recall = mfm.compute_recall(ratings_test_dataset.to_dense(), args.topk)
-
     logging.info(f'Recall@{args.topk}: {recall.item()}')
