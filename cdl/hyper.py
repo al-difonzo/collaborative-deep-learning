@@ -51,7 +51,7 @@ class OptunaWrapper:
         cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device)
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk)
         # trial.report(recall, 0)
-        trial.set_user_attr("recall", recall)
+        trial.set_user_attr(f"Recall@{args.topk}", recall.item())
         trial.set_user_attr("sdae", self.sdae)
         trial.set_user_attr("mfm", self.mfm)
         
