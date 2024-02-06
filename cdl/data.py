@@ -62,7 +62,7 @@ def load_model(sdae, mfm, filename):
     d = torch.load(filename)
 
     if sdae is not None:
-        sdae.update_state_dict(d['autoencoder'])
+        sdae.load_state_dict(d['autoencoder'])
 
     if mfm is not None:
-        mfm.update_state_dict(d['matrix_factorization_model'])
+        mfm.load_state_dict(d['matrix_factorization_model'])
