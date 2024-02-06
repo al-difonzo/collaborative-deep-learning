@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 
 import torch
 import torch.nn as nn
@@ -137,6 +138,7 @@ if __name__ == '__main__':
     if args.user_rec_path is None: args.user_rec_path = f'{args.dataset}_{args.embedding}_user_recommendations_{args.topk}.csv'
     logging.info(f'Saving user recommendations to {args.user_rec_path}')
     user_rec_df = mfm.get_user_recommendations(ratings_test_dataset.to_dense(), args.topk)
+    os.makedirs(os.path.dirname(args.user_rec_path), exist_ok=True)
     user_rec_df.to_csv(args.user_rec_path)
 
     logging.info(f'Calculating recall@{args.topk}')
