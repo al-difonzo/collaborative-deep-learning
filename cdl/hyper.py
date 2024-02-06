@@ -4,9 +4,9 @@ from cdl import constants
 import logging
 import torch
 import optuna
+import shutil
 
 class OptunaWrapper:
-    
     def __init__(self, args, sdae, mfm, train_data, valid_data, content_data, recon_loss_fn, activation):
         self.args = args
         self.sdae = sdae
@@ -49,11 +49,14 @@ class OptunaWrapper:
         
         # Train the model
         cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device)
-        recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk)
-        # trial.report(recall, 0)
-        trial.set_user_attr(f"Recall@{self.args.topk}", recall.item())
-        trial.set_user_attr("sdae", self.sdae)
-        trial.set_user_attr("mfm", self.mfm)
+        recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk).item()
+        trial.set_user_attr(f"Recall@{self.args.topk}", recall)
+        trial_dir = f'{os.path.dirname(self.args.out_model_path)}/trial_{trial.number}'
+        os.makedirs(trial_dir, exist_ok=True)
+        torch.save({'autoencoder': self.sdae.state_dict()}, f'{trial_dir}/sdae.pt')
+        torch.save({'matrix_factorization_model': self.mfm.state_dict()}, f'{trial_dir}/mfm.pt')
+        # trial.set_user_attr("sdae", self.sdae)
+        # trial.set_user_attr("mfm", self.mfm)
         
         # for epoch in range(EPOCHS):
         #     logging.info(f'Training with recon loss {self.args.recon_loss}')
@@ -62,9 +65,9 @@ class OptunaWrapper:
 
         #     trial.report(recall, epoch)
 
-        #     # Handle pruning based on the intermediate value.
-        #     if trial.should_prune():
-        #         raise optuna.exceptions.TrialPruned()
+        # Handle pruning based on the intermediate value.
+        if trial.should_prune():
+            raise optuna.exceptions.TrialPruned()
 
         return 1 - recall  # Optuna minimizes the objective function, whereas recall should be maximized
 
@@ -72,17 +75,20 @@ class OptunaWrapper:
         study = optuna.create_study(direction='minimize', study_name=study_name, storage=storage, load_if_exists=True)
         study.optimize(self.objective, n_trials=n_trials, timeout=1800) # timeouts after 30 minutes, if not yet stopped due to n_trials
 
+        # Clean artifacts from non-best trials
+        trials_parent_dir = os.path.dirname(self.args.out_model_path)
+        dirs_to_clean = [d for d in os.listdir(trials_parent_dir) if os.path.isdir() and d.startswith('trial_') and d != f'trial_{study.best_trial.number}']
+        for d in dirs_to_clean: shutil.rmtree(os.path.join(trials_parent_dir, d))
+
         print("Study statistics: ")
         print("  Number of finished trials: ", len(study.trials))
         print("  Number of pruned trials: ", len(study.get_trials(deepcopy=False, states=[optuna.trial.TrialState.PRUNED])))
         print("  Number of complete trials: ", len(study.get_trials(deepcopy=False, states=[optuna.trial.TrialState.COMPLETE])))
 
-        trial = study.best_trial
         print("Best trial:")
-        print("  Value: ", trial.value)
+        print("  Value: ", study.best_trial.value)
         print("  Params: ")
-        for key, value in trial.params.items():
+        for key, value in study.best_trial.params.items():
             print("    {}: {}".format(key, value))
-        # logging.info("Best Hyperparameters:", best_params)
         
         return study
