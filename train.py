@@ -58,6 +58,7 @@ if __name__ == '__main__':
 
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
+    rng = torch.Generator()
 
     if args.verbose:
         logging.basicConfig(format='%(asctime)s  %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
@@ -124,7 +125,7 @@ if __name__ == '__main__':
     else:
         optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=args.lambda_w)
 
-        content_training_dataset = data.random_subset(content_dataset, int(num_items * 0.8))
+        content_training_dataset = data.random_subset(content_dataset, int(num_items * 0.8), rng=rng)
 
         logging.info(f'Pretraining SDAE with {args.recon_loss} loss')
         train_stacked_autoencoder(sdae, content_training_dataset, args.corruption, args.pretrain_epochs, args.batch_size, recon_loss_fn, optimizer)

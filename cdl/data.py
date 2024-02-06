@@ -13,8 +13,8 @@ class TransformDataset:
         return len(self._dataset)
 
 
-def random_subset(x, k):
-    idx = torch.randperm(len(x))[:k]
+def random_subset(x, k, rng=None):
+    idx = torch.randperm(len(x), generator=rng)[:k]
     return torch.utils.data.Subset(x, idx)
 
 
