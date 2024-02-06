@@ -52,10 +52,8 @@ class OptunaWrapper:
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk)
         # trial.report(recall, 0)
         trial.set_user_attr("recall", recall)
-        trial.set_user_attr("model", {
-            'autoencoder': self.sdae.state_dict(),
-            'matrix_factorization_model': self.mfm.state_dict(),
-        })
+        trial.set_user_attr("sdae", self.sdae.state_dict())
+        trial.set_user_attr("mfm", self.mfm.state_dict())
         
         # for epoch in range(EPOCHS):
         #     logging.info(f'Training with recon loss {self.args.recon_loss}')
