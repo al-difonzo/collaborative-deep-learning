@@ -111,14 +111,7 @@ if __name__ == '__main__':
         optuna_hyper = hyper.OptunaWrapper(args, sdae, mfm, 
                             ratings_training_dataset, ratings_valid_dataset, content_dataset, 
                             recon_loss_fn, activation)
-        # # Create an Optuna study
-        # study = optuna.create_study(study_name=f'CDL_{time.time()}', direction='minimize')
-        # # Perform optimization
-        # study.optimize(optuna_hyper.objective, n_trials=10)  # Adjust the number of trials
-
-        # # Print the best hyperparameters
-        # best_params = study.best_params
-        # print("Best Hyperparameters:", best_params)
+        
         study = optuna_hyper.optimize(n_trials=2, study_name=f'CDL_{int(time.time())}')
 
         logging.info(f'Saving best model to {args.out}')
