@@ -112,11 +112,13 @@ if __name__ == '__main__':
 
     mfm = MatrixFactorizationModel(target_shape=ratings_training_dataset.shape, latent_size=args.latent_size)
     if args.optuna:
-        optuna_hyper = hyper.OptunaWrapper(args, sdae, mfm, 
+        optuna_wrapper = hyper.OptunaWrapper(args, sdae, mfm, 
                             ratings_training_dataset, ratings_valid_dataset, content_dataset, 
                             recon_loss_fn, activation)
         
-        study = optuna_hyper.optimize(n_trials=2, study_name=f'CDL_{int(time.time())}')
+        study_name = os.path.basename(args.out_model_path)
+        storage_name = f"sqlite:///{os.path.splitext(args.out_model_path)[0]}.db"
+        study = optuna_wrapper.optimize(n_trials=2, study_name=study_name, storage=storage_name)
 
         logging.info(f'Saving best model to {args.out_model_path}')
         data.save_model(study.best_trial.user_attrs['sdae'], 

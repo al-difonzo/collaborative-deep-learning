@@ -68,8 +68,8 @@ class OptunaWrapper:
 
         return 1 - recall  # Optuna minimizes the objective function, whereas recall should be maximized
 
-    def optimize(self, n_trials=10, study_name=None):
-        study = optuna.create_study(direction='minimize', study_name=study_name)
+    def optimize(self, n_trials=10, study_name=None, storage=None):
+        study = optuna.create_study(direction='minimize', study_name=study_name, storage=storage, load_if_exists=True)
         study.optimize(self.objective, n_trials=n_trials, timeout=1800) # timeouts after 30 minutes, if not yet stopped due to n_trials
 
         print("Study statistics: ")
