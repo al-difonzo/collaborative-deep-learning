@@ -80,7 +80,7 @@ class OptunaWrapper:
         # Clean artifacts from non-best trials
         trials_parent_dir = os.path.dirname(self.args.out_model_path)
         best_trial_folder = f'trial_{study.best_trial.number}'
-        dirs_to_clean = [d for d in os.listdir(trials_parent_dir) if os.path.isdir() and d.startswith('trial_') and d != best_trial_folder]
+        dirs_to_clean = [d for d in os.listdir(trials_parent_dir) if os.path.isdir(d) and d.startswith('trial_') and d != best_trial_folder]
         for d in dirs_to_clean: shutil.rmtree(os.path.join(trials_parent_dir, d))
         # Move artifacts of best trial to args.out_model_path
         shutil.move(os.path.join(trials_parent_dir, best_trial_folder, '*'), self.args.out_model_path)
