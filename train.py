@@ -120,9 +120,6 @@ if __name__ == '__main__':
         study_name = os.path.basename(args.out_model_path)
         storage_name = f"sqlite:///{os.path.splitext(args.out_model_path)[0]}.db"
         study = optuna_wrapper.optimize(n_trials=args.num_trials, study_name=study_name, storage=storage_name)
-        study_df = study.trials_dataframe(attrs=("value", "user_attrs", "params", "state"))
-        print(study_df)
-        study_df.to_csv(args.out_model_path.replace('pt','csv'))
     else:
         optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=args.lambda_w)
 
@@ -151,3 +148,7 @@ if __name__ == '__main__':
     logging.info(f'Recall@{args.topk} on TEST data: {recall}')
     if args.optuna:
         study.best_trial.set_user_attr(f"Test Recall@{args.topk}", recall)
+        study_df = study.trials_dataframe(attrs=("value", "user_attrs", "params", "state"))
+        study_df = study_df[study_df.state=='COMPLETE'].drop(columns=['state'])
+        print(study_df)
+        study_df.to_csv(args.out_model_path.replace('pt','csv'))

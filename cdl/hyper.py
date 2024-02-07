@@ -100,7 +100,8 @@ class OptunaWrapper:
         print("  Number of pruned trials: ", len(study.get_trials(deepcopy=False, states=[optuna.trial.TrialState.PRUNED])))
         print("  Number of complete trials: ", len(study.get_trials(deepcopy=False, states=[optuna.trial.TrialState.COMPLETE])))
         print("Best trial:")
-        print("  Value: ", study.best_trial.value)
+        print("  Number: ", study.best_trial.number)
+        print(f"  Recall@{self.args.topk} (validation): ", study.best_trial.user_attrs[f"Validation Recall@{self.args.topk}"])
         print("  Params: ")
         for key, value in study.best_trial.params.items():
             print("    {}: {}".format(key, value))
