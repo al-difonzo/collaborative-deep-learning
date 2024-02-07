@@ -5,6 +5,7 @@ import logging
 import torch
 import optuna
 import shutil
+import os
 
 class OptunaWrapper:
     def __init__(self, args, sdae, mfm, train_data, valid_data, content_data, recon_loss_fn, activation):
