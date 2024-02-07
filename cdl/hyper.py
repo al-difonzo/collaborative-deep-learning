@@ -5,6 +5,7 @@ import logging
 import torch
 import optuna
 import shutil
+import glob
 import os
 
 class OptunaWrapper:
@@ -84,11 +85,12 @@ class OptunaWrapper:
         logging.info('Cleaning artifacts from non-best trials')
         trials_parent_dir = os.path.dirname(self.args.out_model_path)
         best_trial_folder = f'trial_{study.best_trial.number}'
-        dirs_to_clean = [d for d in os.listdir(trials_parent_dir) if os.path.isdir(d) and d.startswith('trial_') and d != best_trial_folder]
-        for d in dirs_to_clean: shutil.rmtree(os.path.join(trials_parent_dir, d))
-        logging.info(f'Move model from best trial to {self.args.out_model_path}')
-        shutil.move(os.path.join(trials_parent_dir, best_trial_folder, os.path.basename(self.args.out_model_path)), 
-                    self.args.out_model_path)
+        dirs_to_clean = [d for d in glob.glob(f'{trials_parent_dir}/trial_*') if os.path.isdir(d) and os.path.basename(d)!=best_trial_folder]
+        for d in dirs_to_clean: shutil.rmtree(d)
+        best_trial_model = os.path.join(trials_parent_dir, best_trial_folder, os.path.basename(self.args.out_model_path))
+        if os.path.exists(best_trial_model): 
+            logging.info(f'Moving model from best trial to {self.args.out_model_path}')
+            shutil.move(best_trial_model, self.args.out_model_path)
 
         print("Study statistics: ")
         print("  Number of finished trials: ", len(study.trials))
