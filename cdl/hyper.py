@@ -63,14 +63,12 @@ class OptunaWrapper:
         cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, EPOCHS, self.args.batch_size, self.recon_loss_fn, optimizer)
         
         # Train the model
-        logging.info(f"State dict of MF before training: {self.mfm.state_dict()}")
         cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device)
-        logging.info(f"State dict of MF after training: {self.mfm.state_dict()}")
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk).item()
         trial.set_user_attr(f"Validation Recall@{self.args.topk}", recall)
         trial_dir = f'{os.path.dirname(self.args.out_model_path)}/trial_{trial.number}'
         os.makedirs(trial_dir, exist_ok=True)
-        logging.info(f'autoencoder:\n{self.sdae.state_dict()}\nmatrix_factorization_model:\n{self.mfm.state_dict()}')
+        logging.info(f'\tWHEN SAVING\nautoencoder:\n{self.sdae.state_dict()}\nmatrix_factorization_model:\n{self.mfm.state_dict()}')
         torch.save({'autoencoder': self.sdae.state_dict(),
                     'matrix_factorization_model': self.mfm.state_dict()
                     }, f'{trial_dir}/{os.path.basename(self.args.out_model_path)}')
