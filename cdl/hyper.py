@@ -31,20 +31,13 @@ class OptunaWrapper:
             'lambda_n': trial.suggest_float("lambda_n", 1e-2, 1e4, log=True),
         }
         dangerous_ratio = hypers['lambda_n'] / hypers['lambda_v']
-        extreme_case = dangerous_ratio < 1e-2 or dangerous_ratio > 1e4
-        while extreme_case:
-            logging.warn(f'The ratio lambda_n/lambda_v has a dangerous value for the model: {dangerous_ratio}')
-            hypers.update({
-                'lambda_n': trial.suggest_float("lambda_n", 1e-2, 1e4, log=True),
-                'lambda_v': trial.suggest_float("lambda_v", 1e-2, 1e4, log=True),
-            })
-            dangerous_ratio = hypers['lambda_n'] / hypers['lambda_v']
-            extreme_case = dangerous_ratio < 1e-2 or dangerous_ratio > 1e4
-        return hypers
+        return hypers, dangerous_ratio < 1e-4 or dangerous_ratio > 1e4
 
     
     def objective(self, trial):
-        config = self.get_hyper_combo(trial)
+        config, extreme_case = self.get_hyper_combo(trial)
+        if extreme_case:
+            raise optuna.exceptions.TrialPruned()
         config.update({ # non-hyper parameters
             'conf_a': self.args.conf_a,
             'conf_b': self.args.conf_b,
