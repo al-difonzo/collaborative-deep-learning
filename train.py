@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
     logging.info(f'Loading trained model from {args.out_model_path}')
     data.load_model(sdae, mfm, args.out_model_path)
-    logging.info(f'\tAFTER LOADING\nautoencoder:\n{sdae.state_dict()}\nmatrix_factorization_model:\n{mfm.state_dict()}')
+    # logging.info(f'\tAFTER LOADING\nautoencoder:\n{sdae.state_dict()}\nmatrix_factorization_model:\n{mfm.state_dict()}')
     
     if args.user_rec_path is None: args.user_rec_path = f'{args.dataset}_{args.embedding}_user_recommendations_{args.topk}.csv'
     logging.info(f'Saving user recommendations to {args.user_rec_path}')

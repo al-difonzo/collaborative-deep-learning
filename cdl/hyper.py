@@ -62,7 +62,7 @@ class OptunaWrapper:
         trial.set_user_attr(f"Validation Recall@{self.args.topk}", recall)
         trial_dir = f'{os.path.dirname(self.args.out_model_path)}/trial_{trial.number}'
         os.makedirs(trial_dir, exist_ok=True)
-        logging.info(f'\tWHEN SAVING\nautoencoder:\n{self.sdae.state_dict()}\nmatrix_factorization_model:\n{self.mfm.state_dict()}')
+        # logging.info(f'\tWHEN SAVING\nautoencoder:\n{self.sdae.state_dict()}\nmatrix_factorization_model:\n{self.mfm.state_dict()}')
         torch.save({'autoencoder': self.sdae.state_dict(),
                     'matrix_factorization_model': self.mfm.state_dict()
                     }, f'{trial_dir}/{os.path.basename(self.args.out_model_path)}')
