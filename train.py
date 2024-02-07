@@ -29,8 +29,9 @@ if __name__ == '__main__':
     parser.add_argument('--out_model_path', default='model.pt')
     parser.add_argument('--user_rec_path', type=str, default=None)
     parser.add_argument('--topk', type=int, default=300)
-    parser.add_argument('--optuna', action='store_true')
-    parser.add_argument('--num_trials', type=int, default=30)
+    parser.add_argument('--run_optuna', action='store_true')
+    parser.add_argument('--optuna_n_trials', type=int, default=30)
+    parser.add_argument('--optuna_timeout', type=int, default=600)
     parser.add_argument('--hyperopt', action='store_true')
 
     parser.add_argument('--conf_a', type=float, default=1.0)
@@ -84,8 +85,6 @@ if __name__ == '__main__':
     logging.info(f'Size of ratings_training_dataset: {ratings_training_dataset.size()}')
     ratings_valid_dataset = data.load_cf_valid_data(args.dataset, args.train_dataset_path)
     logging.info(f'Size of ratings_valid_dataset: {ratings_valid_dataset.size()}')
-    ratings_test_dataset = data.load_cf_test_data(args.dataset, args.test_dataset_path)
-    logging.info(f'Size of ratings_test_dataset: {ratings_test_dataset.size()}')
 
     config = {
         'conf_a': args.conf_a,
@@ -112,14 +111,15 @@ if __name__ == '__main__':
     sdae.to(device)
 
     mfm = MatrixFactorizationModel(target_shape=ratings_training_dataset.shape, latent_size=args.latent_size)
-    if args.optuna:
+    if args.run_optuna:
         optuna_wrapper = hyper.OptunaWrapper(args, sdae, mfm, 
                             ratings_training_dataset, ratings_valid_dataset, content_dataset, 
                             recon_loss_fn, activation)
         
         study_name = os.path.basename(args.out_model_path)
         storage_name = f"sqlite:///{os.path.splitext(args.out_model_path)[0]}.db"
-        study = optuna_wrapper.optimize(n_trials=args.num_trials, study_name=study_name, storage=storage_name)
+        # Optuna will timeout after `args.optuna_timeout` seconds, if not yet stopped due to `args.optuna_n_trials`
+        study = optuna_wrapper.optimize(n_trials=args.optuna_n_trials, timeout=args.optuna_timeout, study_name=study_name, storage=storage_name)
     else:
         optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=args.lambda_w)
 
@@ -133,22 +133,3 @@ if __name__ == '__main__':
 
         logging.info(f'Saving model to {args.out_model_path}')
         data.save_model(sdae, mfm, args.out_model_path)
-
-    logging.info(f'Loading trained model from {args.out_model_path}')
-    data.load_model(sdae, mfm, args.out_model_path)
-    # logging.info(f'\tAFTER LOADING\nautoencoder:\n{sdae.state_dict()}\nmatrix_factorization_model:\n{mfm.state_dict()}')
-    
-    if args.user_rec_path is None: args.user_rec_path = f'{args.dataset}_{args.embedding}_user_recommendations_{args.topk}.csv'
-    logging.info(f'Saving user recommendations to {args.user_rec_path}')
-    user_rec_df = mfm.get_user_recommendations(ratings_test_dataset.to_dense(), args.topk)
-    user_rec_df.to_csv(args.user_rec_path)
-
-    logging.info(f'Calculating recall@{args.topk} on TEST data')
-    recall = mfm.compute_recall(ratings_test_dataset.to_dense(), args.topk).item()
-    logging.info(f'Recall@{args.topk} on TEST data: {recall}')
-    if args.optuna:
-        study.best_trial.set_user_attr(f"Test Recall@{args.topk}", recall)
-        study_df = study.trials_dataframe(attrs=("value", "user_attrs", "params", "state"))
-        study_df = study_df[study_df.state=='COMPLETE'].drop(columns=['state'])
-        print(study_df)
-        study_df.to_csv(args.out_model_path.replace('pt','csv'))
