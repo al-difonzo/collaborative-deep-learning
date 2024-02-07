@@ -49,8 +49,12 @@ class OptunaWrapper:
         cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, EPOCHS, self.args.batch_size, self.recon_loss_fn, optimizer)
         
         # Train the model
+        logging.info(f"State dict of MF before training: {self.mfm.state_dict()}")
         cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device)
+        logging.info(f"State dict of MF after training: {self.mfm.state_dict()}")
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk).item()
+        logging.info(f"Recall after training: {recall}")
+        logging.info(f"Value to minimize: {1 - recall}")
         trial.set_user_attr(f"Recall@{self.args.topk}", recall)
         trial_dir = f'{os.path.dirname(self.args.out_model_path)}/trial_{trial.number}'
         os.makedirs(trial_dir, exist_ok=True)
@@ -65,11 +69,11 @@ class OptunaWrapper:
         #     # Evaluate the model on validation set
         #     recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk)
 
-        #     trial.report(recall, epoch)
 
-        # Handle pruning based on the intermediate value.
-        if trial.should_prune():
-            raise optuna.exceptions.TrialPruned()
+        # # Handle pruning based on the intermediate value.
+        # trial.report(recall, epoch)
+        # if trial.should_prune():
+        #     raise optuna.exceptions.TrialPruned()
 
         return 1 - recall  # Optuna minimizes the objective function, whereas recall should be maximized
 

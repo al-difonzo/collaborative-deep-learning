@@ -119,7 +119,7 @@ if __name__ == '__main__':
         study_name = os.path.basename(args.out_model_path)
         storage_name = f"sqlite:///{os.path.splitext(args.out_model_path)[0]}.db"
         study = optuna_wrapper.optimize(n_trials=2, study_name=study_name, storage=storage_name)
-        print(study.trials_dataframe(attrs=("number", "value", "params", "state")))
+        print(study.trials_dataframe(attrs=("number", "value", "user_attrs", "params", "state")))
         # data.save_model(study.best_trial.user_attrs['sdae'], 
         #                 study.best_trial.user_attrs['mfm'],
         #                 args.out_model_path)
