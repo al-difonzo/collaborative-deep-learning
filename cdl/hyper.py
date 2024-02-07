@@ -22,14 +22,27 @@ class OptunaWrapper:
         self.activation = constants.SDAE_ACTIVATIONS[args.activation]
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    
     def get_hyper_combo(self, trial):
-        return {
+        hypers = {
             'lambda_u': trial.suggest_float("lambda_u", 1e-2, 1e4, log=True),
             'lambda_v': trial.suggest_float("lambda_v", 1e-2, 1e4, log=True),
             'lambda_w': trial.suggest_float("lambda_w", 1e-2, 1e4, log=True),
             'lambda_n': trial.suggest_float("lambda_n", 1e-2, 1e4, log=True),
         }
+        dangerous_ratio = hypers['lambda_n'] / hypers['lambda_v']
+        extreme_case = dangerous_ratio < 1e-2 or dangerous_ratio > 1e4
+        while extreme_case:
+            logging.warn(f'The ratio lambda_n/lambda_v has a dangerous value for the model: {dangerous_ratio}')
+            hypers.update({
+                'lambda_n': trial.suggest_float("lambda_n", 1e-2, 1e4, log=True),
+                'lambda_v': trial.suggest_float("lambda_v", 1e-2, 1e4, log=True),
+            })
+            dangerous_ratio = hypers['lambda_n'] / hypers['lambda_v']
+            extreme_case = dangerous_ratio < 1e-2 or dangerous_ratio > 1e4
+        return hypers
 
+    
     def objective(self, trial):
         config = self.get_hyper_combo(trial)
         config.update({ # non-hyper parameters
@@ -45,7 +58,7 @@ class OptunaWrapper:
         content_training_dataset = data.random_subset(self.content_data, int(self.num_items * 0.75))
         
         # EPOCHS = trial.suggest_int('epochs', 5, 20)
-        EPOCHS = 2
+        EPOCHS = self.args.epochs
         logging.info(f'Pretraining SDAE with {self.args.recon_loss} loss for {EPOCHS} epochs')
         cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, EPOCHS, self.args.batch_size, self.recon_loss_fn, optimizer)
         
@@ -54,22 +67,13 @@ class OptunaWrapper:
         cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device)
         logging.info(f"State dict of MF after training: {self.mfm.state_dict()}")
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk).item()
-        logging.info(f"Recall after training: {recall}")
-        logging.info(f"Value to minimize: {1 - recall}")
-        trial.set_user_attr(f"Recall@{self.args.topk}", recall)
+        trial.set_user_attr(f"Validation Recall@{self.args.topk}", recall)
         trial_dir = f'{os.path.dirname(self.args.out_model_path)}/trial_{trial.number}'
         os.makedirs(trial_dir, exist_ok=True)
+        logging.info(f'autoencoder:\n{self.sdae.state_dict()}\nmatrix_factorization_model:\n{self.mfm.state_dict()}')
         torch.save({'autoencoder': self.sdae.state_dict(),
                     'matrix_factorization_model': self.mfm.state_dict()
                     }, f'{trial_dir}/{os.path.basename(self.args.out_model_path)}')
-        # trial.set_user_attr("sdae", self.sdae)
-        # trial.set_user_attr("mfm", self.mfm)
-        
-        # for epoch in range(EPOCHS):
-        #     logging.info(f'Training with recon loss {self.args.recon_loss}')
-        #     # Evaluate the model on validation set
-        #     recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk)
-
 
         # # Handle pruning based on the intermediate value.
         # trial.report(recall, epoch)
@@ -78,6 +82,7 @@ class OptunaWrapper:
 
         return 1 - recall  # Optuna minimizes the objective function, whereas recall should be maximized
 
+    
     def optimize(self, n_trials=10, study_name=None, storage=None):
         study = optuna.create_study(direction='minimize', study_name=study_name, storage=storage, load_if_exists=True)
         study.optimize(self.objective, n_trials=n_trials, timeout=1800) # timeouts after 30 minutes, if not yet stopped due to n_trials
@@ -96,7 +101,6 @@ class OptunaWrapper:
         print("  Number of finished trials: ", len(study.trials))
         print("  Number of pruned trials: ", len(study.get_trials(deepcopy=False, states=[optuna.trial.TrialState.PRUNED])))
         print("  Number of complete trials: ", len(study.get_trials(deepcopy=False, states=[optuna.trial.TrialState.COMPLETE])))
-
         print("Best trial:")
         print("  Value: ", study.best_trial.value)
         print("  Params: ")

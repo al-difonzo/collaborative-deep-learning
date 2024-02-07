@@ -120,9 +120,6 @@ if __name__ == '__main__':
         storage_name = f"sqlite:///{os.path.splitext(args.out_model_path)[0]}.db"
         study = optuna_wrapper.optimize(n_trials=2, study_name=study_name, storage=storage_name)
         print(study.trials_dataframe(attrs=("number", "value", "user_attrs", "params", "state")))
-        # data.save_model(study.best_trial.user_attrs['sdae'], 
-        #                 study.best_trial.user_attrs['mfm'],
-        #                 args.out_model_path)
     else:
         optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=args.lambda_w)
 
