@@ -29,8 +29,9 @@ if __name__ == '__main__':
     parser.add_argument('--out_model_path', default='model.pt')
     parser.add_argument('--user_rec_path', type=str, default=None)
     parser.add_argument('--topk', type=int, default=300)
-    parser.add_argument('--hyperopt', action='store_true')
     parser.add_argument('--optuna', action='store_true')
+    parser.add_argument('--num_trials', type=int, default=30)
+    parser.add_argument('--hyperopt', action='store_true')
 
     parser.add_argument('--conf_a', type=float, default=1.0)
     parser.add_argument('--conf_b', type=float, default=0.01)
@@ -118,7 +119,7 @@ if __name__ == '__main__':
         
         study_name = os.path.basename(args.out_model_path)
         storage_name = f"sqlite:///{os.path.splitext(args.out_model_path)[0]}.db"
-        study = optuna_wrapper.optimize(n_trials=2, study_name=study_name, storage=storage_name)
+        study = optuna_wrapper.optimize(n_trials=args.num_trials, study_name=study_name, storage=storage_name)
         study_df = study.trials_dataframe(attrs=("value", "user_attrs", "params", "state"))
         print(study_df)
         study_df.to_csv(args.out_model_path.replace('pt','csv'))
