@@ -1,4 +1,6 @@
 import logging
+import numpy as np
+import optuna
 
 import torch
 import torch.cuda
@@ -15,7 +17,7 @@ def AutoencoderLatentLoss(lambda_v, lambda_n):
     return lambda pred, target: lambda_v / lambda_n * F.mse_loss(pred, target)
 
 
-def train_model(sdae, mfm, content, ratings, optimizer, recon_loss_fn, config, epochs, batch_size, device=None, max_iters=10):
+def train_model(sdae, mfm, content, ratings, optimizer, recon_loss_fn, config, epochs, batch_size, device=None, max_iters=10, trial=None):
     """
     Trains the CDL model. For best results, the SDAE should be pre-trained.
 
@@ -43,6 +45,8 @@ def train_model(sdae, mfm, content, ratings, optimizer, recon_loss_fn, config, e
 
         if epoch % 3 == 0:
             loss = mfm_optim.loss(latent_items_target).item()
+            if trial is not None: 
+                if np.isnan(loss) or np.isinf(loss): raise optuna.exceptions.TrialPruned()
             loss += config['lambda_n'] / 2 * F.mse_loss(recon, content, reduction='sum').item()
             loss += config['lambda_w'] / 2 * sum(p.square().sum() for p in sdae.parameters()).item()
             logging.info(f'  neg_likelihood: {loss}')

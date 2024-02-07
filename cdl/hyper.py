@@ -56,7 +56,8 @@ class OptunaWrapper:
         cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, EPOCHS, self.args.batch_size, self.recon_loss_fn, optimizer)
         
         # Train the model
-        cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device)
+        cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, 
+                        epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device, trial=trial)
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk).item()
         trial.set_user_attr(f"Validation Recall@{self.args.topk}", recall)
         trial_dir = f'{os.path.dirname(self.args.out_model_path)}/trial_{trial.number}'
