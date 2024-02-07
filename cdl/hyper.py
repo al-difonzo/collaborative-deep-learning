@@ -53,8 +53,9 @@ class OptunaWrapper:
         trial.set_user_attr(f"Recall@{self.args.topk}", recall)
         trial_dir = f'{os.path.dirname(self.args.out_model_path)}/trial_{trial.number}'
         os.makedirs(trial_dir, exist_ok=True)
-        torch.save({'autoencoder': self.sdae.state_dict()}, f'{trial_dir}/sdae.pt')
-        torch.save({'matrix_factorization_model': self.mfm.state_dict()}, f'{trial_dir}/mfm.pt')
+        torch.save({'autoencoder': self.sdae.state_dict(),
+                    'matrix_factorization_model': self.mfm.state_dict()
+                    }, f'{trial_dir}/{os.path.basename(self.args.out_model_path)}')
         # trial.set_user_attr("sdae", self.sdae)
         # trial.set_user_attr("mfm", self.mfm)
         
@@ -77,8 +78,11 @@ class OptunaWrapper:
 
         # Clean artifacts from non-best trials
         trials_parent_dir = os.path.dirname(self.args.out_model_path)
-        dirs_to_clean = [d for d in os.listdir(trials_parent_dir) if os.path.isdir() and d.startswith('trial_') and d != f'trial_{study.best_trial.number}']
+        best_trial_folder = f'trial_{study.best_trial.number}'
+        dirs_to_clean = [d for d in os.listdir(trials_parent_dir) if os.path.isdir() and d.startswith('trial_') and d != best_trial_folder]
         for d in dirs_to_clean: shutil.rmtree(os.path.join(trials_parent_dir, d))
+        # Move artifacts of best trial to args.out_model_path
+        shutil.move(os.path.join(trials_parent_dir, best_trial_folder, '*'), args.out_model_path)
 
         print("Study statistics: ")
         print("  Number of finished trials: ", len(study.trials))

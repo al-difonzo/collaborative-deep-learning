@@ -121,9 +121,9 @@ if __name__ == '__main__':
         study = optuna_wrapper.optimize(n_trials=2, study_name=study_name, storage=storage_name)
 
         logging.info(f'Saving best model to {args.out_model_path}')
-        data.save_model(study.best_trial.user_attrs['sdae'], 
-                        study.best_trial.user_attrs['mfm'],
-                        args.out_model_path)
+        # data.save_model(study.best_trial.user_attrs['sdae'], 
+        #                 study.best_trial.user_attrs['mfm'],
+        #                 args.out_model_path)
     else:
         optimizer = optim.AdamW(sdae.parameters(), lr=args.lr, weight_decay=args.lambda_w)
 
