@@ -55,30 +55,29 @@ if __name__ == '__main__':
                 logging.info(f'Recall@{args.topk} on TEST data: {recall}')
                 logging.info(f'Updating Test Recall@{args.topk} for trial {trial_num} in dataframe')
                 study_df.at[trial_num, f'Test Recall@{args.topk}'] = recall
-            # shutil.rmtree(d)
         best_trial_folder_vd = f'trial_{study.best_trial.number}'
         logging.info(f'Best trial according to Validation values: {best_trial_folder_vd}')
         best_trial_num = int(study_df[f'Test Recall@{args.topk}'].idxmax())
         best_trial_folder_te = f'trial_{best_trial_num}'
         logging.info(f'Best trial according to Test values: {best_trial_folder_te}')
         best_trial_model_te = os.path.join(trials_parent_dir, best_trial_folder_te, os.path.basename(args.model_path))
-        # best_trial_model = os.path.join(trials_parent_dir, best_trial_folder_vd, os.path.basename(args.model_path))
+        # best_trial_model_vd = os.path.join(trials_parent_dir, best_trial_folder_vd, os.path.basename(args.model_path))
         if os.path.exists(best_trial_model_te): 
-            logging.info(f'Moving model of best trial from to {args.model_path}')
+            logging.info(f'Moving model of best trial from {best_trial_model_te} to {args.model_path}')
             shutil.copyfile(best_trial_model_te, args.model_path)
         # logging.info(f'\tAFTER LOADING\nautoencoder:\n{sdae.state_dict()}\nmatrix_factorization_model:\n{mfm.state_dict()}')
-        
+        dirs_to_clean = [d for d in trials_dirs if os.path.basename(d) not in [best_trial_folder_vd, best_trial_folder_te]]
+        for d in dirs_to_clean: shutil.rmtree(d)
         print(study_df)
         study_df.to_csv(study_df_path)
-    
-    else:
-        logging.info(f'Loading trained model from {args.model_path}')
-        data.load_model(sdae=None, mfm=mfm, filename=args.model_path)
-    
-        logging.info(f'Saving user recommendations to {args.user_rec_path}')
-        user_rec_df = mfm.get_user_recommendations(ratings_test_dataset.to_dense(), args.topk)
-        user_rec_df.to_csv(args.user_rec_path)
 
-        logging.info(f'Calculating recall@{args.topk} on TEST data')
-        recall = mfm.compute_recall(ratings_test_dataset.to_dense(), args.topk).item()
-        logging.info(f'Recall@{args.topk} on TEST data: {recall}')
+
+    logging.info(f'Loading trained model from {args.model_path}')
+    data.load_model(sdae=None, mfm=mfm, filename=args.model_path)
+
+    logging.info(f'Saving user recommendations to {args.user_rec_path}')
+    user_rec_df = mfm.get_user_recommendations(ratings_test_dataset.to_dense(), args.topk)
+    user_rec_df.to_csv(args.user_rec_path)
+
+    recall = mfm.compute_recall(ratings_test_dataset.to_dense(), args.topk).item()
+    logging.info(f'Recall@{args.topk} on TEST data: {recall}')

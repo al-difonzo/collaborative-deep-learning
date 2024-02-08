@@ -71,57 +71,8 @@ class OptunaWrapper:
     def optimize(self, n_trials=10, timeout=600, study_name=None, storage=None):
         study = optuna.create_study(direction='minimize', study_name=study_name, storage=storage, load_if_exists=True)
         
-        study.enqueue_trial({'lambda_n': 0.2560861375505139, 'lambda_u': 0.0990673298361566, 'lambda_v': 14.116461137607097, 'lambda_w': 0.0316275979351464})
-        study.enqueue_trial({'lambda_n': 2.7691590625599223, 'lambda_u': 0.029149783135337, 'lambda_v': 0.0672587691009253, 'lambda_w': 5.058158379843988})
-        study.enqueue_trial({'lambda_n': 3.1112180261398668, 'lambda_u': 0.0256784335956293, 'lambda_v': 0.0664517443448319, 'lambda_w': 2.840059384124836})
-        study.enqueue_trial({'lambda_n': 1.0259320918617851, 'lambda_u': 0.0323645844154793, 'lambda_v': 0.0351464324818799, 'lambda_w': 1.7129012689457732})
-        study.enqueue_trial({'lambda_n': 0.1082215501082346, 'lambda_u': 0.399805428514618, 'lambda_v': 0.4113994116701447, 'lambda_w': 0.3388189806592133})
-        study.enqueue_trial({'lambda_n': 18.0498825981281, 'lambda_u': 0.3611354216647621, 'lambda_v': 4.954212521008054, 'lambda_w': 0.2913460121936407})
-        study.enqueue_trial({'lambda_n': 0.2098624338363367, 'lambda_u': 0.1886385462396957, 'lambda_v': 1.5581897468559742, 'lambda_w': 0.596533878625882})
-        study.enqueue_trial({'lambda_n': 0.4054331842975566, 'lambda_u': 1.265590349032221, 'lambda_v': 0.0324811970271214, 'lambda_w': 0.7219385365488191})
-        study.enqueue_trial({'lambda_n': 5.787595985786128, 'lambda_u': 0.7257817092577302, 'lambda_v': 0.1657546218249667, 'lambda_w': 0.7008189802215785})
-        study.enqueue_trial({'lambda_n': 0.4553469590812619, 'lambda_u': 2.993619725182766, 'lambda_v': 0.6993915394948664, 'lambda_w': 4.02489957495183})
-        
         study.optimize(self.objective, n_trials=n_trials, timeout=timeout)
         
-        # ratings_test_dataset = data.load_cf_test_data(self.args.dataset, self.args.test_dataset_path)
-        # logging.info(f'Size of ratings_test_dataset: {ratings_test_dataset.size()}')
-        # if self.args.user_rec_path is None: self.args.user_rec_path = f'{self.args.dataset}_{self.args.embedding}_user_recommendations_{self.args.topk}.csv'
-        # logging.info(f'Saving user recommendations to {self.args.user_rec_path}')
-        # user_rec_df = self.mfm.get_user_recommendations(ratings_test_dataset.to_dense(), self.args.topk)
-        # user_rec_df.to_csv(self.args.user_rec_path)
-        # logging.info(f'Calculating recall@{self.args.topk} on TEST data')
-        # recall = self.mfm.compute_recall(ratings_test_dataset.to_dense(), self.args.topk).item()
-        # logging.info(f'Recall@{self.args.topk} on TEST data: {recall}')
-        # study_df = study.trials_dataframe(attrs=("value", "user_attrs", "params", "state"))
-        # study_df = study_df[study_df.state=='COMPLETE'].drop(columns=['state'])
-        # import math
-        # assert math.isclose(study_df.loc[study_df.index[-1], 'params_lambda_n'], 0.2560861375505139, abs_tol=0.000003), study_df.loc[study_df.index[-1], 'params_lambda_n']
-        # import pandas as pd
-        # import numpy as np
-        # study_df[f'Test Recall@{self.args.topk}'] = np.nan
-        # # study_df.loc[study_df.index[-1], f'Test Recall@{args.topk}'] = 0.25922495126724243
-        # study_df_path = self.args.model_path.replace('pt','csv')
-        # if os.path.exists(study_df_path):
-        #     logging.info(f'Updating study trials DataFrame with non-NaN values from {study_df_path}')
-        #     study_df.update(pd.read_csv(study_df_path, index_col=0))
-        #     print(study_df[~np.isnan(study_df[f'Test Recall@{self.args.topk}'])])
-        # if np.isnan(study_df.at[study_df.index[-1], f'Test Recall@{self.args.topk}']):
-        #     logging.info(f'Updating Test Recall@{self.args.topk} for {study_df.index[-1]}')
-        #     study_df.at[study_df.index[-1], f'Test Recall@{self.args.topk}'] = recall
-        # print(study_df)
-        # study_df.to_csv(study_df_path)
-
-        # logging.info('Cleaning artifacts from non-best trials')
-        # trials_parent_dir = os.path.dirname(self.args.model_path)
-        # best_trial_folder = f'trial_{study.best_trial.number}'
-        # dirs_to_clean = [d for d in glob.glob(f'{trials_parent_dir}/trial_*') if os.path.isdir(d) and os.path.basename(d)!=best_trial_folder]
-        # for d in dirs_to_clean: shutil.rmtree(d)
-        # best_trial_model = os.path.join(trials_parent_dir, best_trial_folder, os.path.basename(self.args.model_path))
-        # if os.path.exists(best_trial_model): 
-        #     logging.info(f'Moving model from best trial to {self.args.model_path}')
-        #     shutil.move(best_trial_model, self.args.model_path)
-
         print("Study statistics: ")
         print("  Number of finished trials: ", len(study.trials))
         print("  Number of pruned trials: ", len(study.get_trials(deepcopy=False, states=[optuna.trial.TrialState.PRUNED])))
