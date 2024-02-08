@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='citeulike-a')
     parser.add_argument('--train_dataset_path', type=str, default=None)
     parser.add_argument('--test_dataset_path', type=str, default=None)
-    parser.add_argument('--out_model_path', default='model.pt')
+    parser.add_argument('--model_path', default='model.pt')
     parser.add_argument('--user_rec_path', type=str, default=None)
     parser.add_argument('--topk', type=int, default=300)
     parser.add_argument('--run_optuna', action='store_true')
@@ -66,7 +66,7 @@ if __name__ == '__main__':
         logging.basicConfig(format='%(asctime)s  %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
 
     # Create directories for artifacts
-    for path in [args.embedding_path, args.train_dataset_path, args.test_dataset_path, args.user_rec_path, args.out_model_path]: 
+    for path in [args.embedding_path, args.train_dataset_path, args.test_dataset_path, args.user_rec_path, args.model_path]: 
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
     # Note: SDAE inputs and parameters will use the GPU (if available), 
@@ -116,8 +116,8 @@ if __name__ == '__main__':
                             ratings_training_dataset, ratings_valid_dataset, content_dataset, 
                             recon_loss_fn, activation)
         
-        study_name = os.path.basename(args.out_model_path)
-        storage_name = f"sqlite:///{os.path.splitext(args.out_model_path)[0]}.db"
+        study_name = os.path.basename(args.model_path)
+        storage_name = f"sqlite:///{os.path.splitext(args.model_path)[0]}.db"
         # Optuna will timeout after `args.optuna_timeout` seconds, if not yet stopped due to `args.optuna_n_trials`
         study = optuna_wrapper.optimize(n_trials=args.optuna_n_trials, timeout=args.optuna_timeout, study_name=study_name, storage=storage_name)
     else:
@@ -131,5 +131,5 @@ if __name__ == '__main__':
         logging.info(f'Training with recon loss {args.recon_loss}')
         train_model(sdae, mfm, content_dataset, ratings_training_dataset, optimizer, recon_loss_fn, config, epochs=args.epochs, batch_size=args.batch_size, device=device)
 
-        logging.info(f'Saving model to {args.out_model_path}')
-        data.save_model(sdae, mfm, args.out_model_path)
+        logging.info(f'Saving model to {args.model_path}')
+        data.save_model(sdae, mfm, args.model_path)
