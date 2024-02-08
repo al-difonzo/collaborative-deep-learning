@@ -63,6 +63,8 @@ def train_model(sdae, mfm, content, ratings, optimizer, recon_loss_fn, config, e
     for i in range(max_iters):
         mfm_optim.step(latent_items_target)
         loss = mfm_optim.loss(latent_items_target)
+        if trial is not None: 
+            if np.isnan(loss) or np.isinf(loss): raise optuna.exceptions.TrialPruned()
         if prev_loss is not None and (prev_loss - loss) / loss < 1e-4:
             break
 
@@ -206,7 +208,7 @@ def train(model, dataset, loss_fn, batch_size, optimizer):
     for i, (xb, yb) in enumerate(dataloader):
         yb_pred = model(xb)
         loss = loss_fn(yb_pred, yb)
-
+        if np.isnan(loss) or np.isinf(loss): raise optuna.exceptions.TrialPruned()
         if i % 100 == 0:
             current = i * batch_size
             logging.info(f'  loss: {loss:>7f}  [{current:>5d}/{size:>5d}]')
