@@ -208,7 +208,6 @@ def train(model, dataset, loss_fn, batch_size, optimizer):
     for i, (xb, yb) in enumerate(dataloader):
         yb_pred = model(xb)
         loss = loss_fn(yb_pred, yb)
-        if np.isnan(loss) or np.isinf(loss): raise optuna.exceptions.TrialPruned()
         if i % 100 == 0:
             current = i * batch_size
             logging.info(f'  loss: {loss:>7f}  [{current:>5d}/{size:>5d}]')
