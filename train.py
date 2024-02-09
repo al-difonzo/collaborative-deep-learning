@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--embedding_path', type=str, default=None)
     parser.add_argument('--dataset', type=str, default='citeulike-a')
     parser.add_argument('--train_dataset_path', type=str, default=None)
-    parser.add_argument('--test_dataset_path', type=str, default=None)
+    parser.add_argument('--valid_dataset_path', type=str, default=None)
     parser.add_argument('--model_path', default='model.pt')
     parser.add_argument('--user_rec_path', type=str, default=None)
     parser.add_argument('--topk', type=int, default=300)
@@ -65,8 +65,8 @@ if __name__ == '__main__':
     if args.verbose:
         logging.basicConfig(format='%(asctime)s  %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
 
-    # Create directories for artifacts
-    for path in [args.embedding_path, args.train_dataset_path, args.test_dataset_path, args.user_rec_path, args.model_path]: 
+    # Create necessary directory tree (only for output artifacts)
+    for path in [args.user_rec_path, args.model_path]: 
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
     # Note: SDAE inputs and parameters will use the GPU (if available), 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     logging.info('Loading ratings datasets')
     ratings_training_dataset = data.load_cf_train_data(args.dataset, args.train_dataset_path)
     logging.info(f'Size of ratings_training_dataset: {ratings_training_dataset.size()}')
-    ratings_valid_dataset = data.load_cf_valid_data(args.dataset, args.train_dataset_path)
+    ratings_valid_dataset = data.load_cf_valid_data(args.dataset, args.valid_dataset_path)
     logging.info(f'Size of ratings_valid_dataset: {ratings_valid_dataset.size()}')
 
     config = {

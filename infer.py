@@ -24,6 +24,10 @@ if __name__ == '__main__':
 
     logging.basicConfig(format='%(asctime)s  %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
 
+    # Create necessary directory tree (only for output artifacts)
+    for path in [args.user_rec_path, args.optuna_study_name]: 
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
     ratings_test_dataset = data.load_cf_test_data(args.dataset, args.test_dataset_path)
     logging.info(f'Size of ratings_test_dataset: {ratings_test_dataset.size()}')
     mfm = MatrixFactorizationModel((1, 1), 1)
