@@ -66,8 +66,8 @@ if __name__ == '__main__':
         logging.basicConfig(format='%(asctime)s  %(message)s', datefmt='%I:%M:%S', level=logging.INFO)
 
     # Create necessary directory tree (only for output artifacts)
-    for path in [args.user_rec_path, args.model_path]: 
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+    for path in [args.user_rec_path, args.optuna_study_name]:
+        if os.path.dirname(path) != '': os.makedirs(os.path.dirname(path), exist_ok=True)
 
     # Note: SDAE inputs and parameters will use the GPU (if available), 
     # but U and V matrices of CDL do not go on the GPU (and therefore nor does the ratings
