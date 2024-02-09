@@ -64,14 +64,29 @@ if __name__ == '__main__':
         best_trial_num = int(study_df[f'Test Recall@{args.topk}'].idxmax())
         best_trial_folder_te = f'trial_{best_trial_num}'
         logging.info(f'Best trial according to Test values: {best_trial_folder_te}')
+        
         best_trial_model_te = os.path.join(trials_parent_dir, best_trial_folder_te, os.path.basename(args.model_path))
-        # best_trial_model_vd = os.path.join(trials_parent_dir, best_trial_folder_vd, os.path.basename(args.model_path))
-        if os.path.exists(best_trial_model_te): 
-            logging.info(f'Moving model of best trial from {best_trial_model_te} to {args.model_path}')
-            shutil.copyfile(best_trial_model_te, args.model_path)
+        # if os.path.exists(best_trial_model_te): 
+        #     logging.info(f'Moving model of best trial from {best_trial_model_te} to {args.model_path}')
+        #     shutil.copyfile(best_trial_model_te, args.model_path)
         # logging.info(f'\tAFTER LOADING\nautoencoder:\n{sdae.state_dict()}\nmatrix_factorization_model:\n{mfm.state_dict()}')
-        dirs_to_clean = [d for d in trials_dirs if os.path.basename(d) not in [best_trial_folder_vd, best_trial_folder_te]]
-        for d in dirs_to_clean: shutil.rmtree(d)
+        logging.info(f'Cleaning trial folders, except for best trials (according to Test + according to Validation values)')
+        # dirs_to_clean = [d for d in trials_dirs if os.path.basename(d) not in [best_trial_folder_vd, best_trial_folder_te]]
+        # for d in dirs_to_clean: shutil.rmtree(d)
+        for d in trials_dirs:
+            dir_base = os.path.basename(d) 
+            if dir_base == best_trial_folder_te: 
+                logging.info(f'Moving model of best trial from {best_trial_model_te} to {args.model_path}')
+                shutil.move(best_trial_model_te, args.model_path)
+                shutil.rmtree(d)
+            elif dir_base == best_trial_folder_vd:
+                new_folder_name = f'{trials_parent_dir}/best_vd_trial_{args.model_path.split("_")[-3]}'
+                logging.info(f'Freezing trial folder {best_trial_folder_vd} by renaming to {new_folder_name}')
+                os.rename(d, new_folder_name)
+            else:
+                logging.info(f'Cleaning {d}')
+                shutil.rmtree(d)
+        
         print(study_df)
         study_df.to_csv(study_df_path)
 
