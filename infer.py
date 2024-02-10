@@ -38,12 +38,13 @@ if __name__ == '__main__':
         
         study_df = study.trials_dataframe(attrs=("value", "user_attrs", "params", "state"))
         study_df = study_df[study_df.state=='COMPLETE'].drop(columns=['state'])
-        study_df[f'Test Recall@{args.topk}'] = np.nan
+        test_recall_col = f'Test Recall@{args.topk}'
+        study_df[test_recall_col] = np.nan
         study_df_path = args.model_path.replace('pt','csv')
         if os.path.exists(study_df_path):
             logging.info(f'Updating study trials DataFrame with non-NaN values from {study_df_path}')
             study_df.update(pd.read_csv(study_df_path, index_col=0))
-            print(study_df[~np.isnan(study_df[f'Test Recall@{args.topk}'])])
+            print(study_df[~np.isnan(study_df[test_recall_col])])
         
         trials_parent_dir = os.path.dirname(args.model_path)
         trials_dirs = [d for d in glob.glob(f'{trials_parent_dir}/trial_*') if os.path.isdir(d)]
@@ -58,12 +59,12 @@ if __name__ == '__main__':
                 recall = mfm.compute_recall(ratings_test_dataset.to_dense(), args.topk).item()
                 logging.info(f'Recall@{args.topk} on TEST data: {recall}')
                 logging.info(f'Updating Test Recall@{args.topk} for trial {trial_num} in dataframe')
-                study_df.at[trial_num, f'Test Recall@{args.topk}'] = recall
+                study_df.at[trial_num, test_recall_col] = recall
         best_trial_folder_vd = f'trial_{study.best_trial.number}'
-        logging.info(f'Best trial according to Validation values: {best_trial_folder_vd}')
-        best_trial_num = int(study_df[f'Test Recall@{args.topk}'].idxmax())
+        logging.info(f'Best trial according to Validation values is {best_trial_folder_vd} with recall {study_df.at[study.best_trial.number, test_recall_col]}')
+        best_trial_num = int(study_df[test_recall_col].idxmax())
         best_trial_folder_te = f'trial_{best_trial_num}'
-        logging.info(f'Best trial according to Test values: {best_trial_folder_te}')
+        logging.info(f'Best trial according to Test values is {best_trial_folder_te} with recall {study_df[test_recall_col].max()}')
         
         best_trial_model_te = os.path.join(trials_parent_dir, best_trial_folder_te, os.path.basename(args.model_path))
         # if os.path.exists(best_trial_model_te): 
