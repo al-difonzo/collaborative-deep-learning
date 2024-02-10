@@ -56,7 +56,7 @@ class OptunaWrapper:
         
         # TRAINING_EPOCHS = self.args.epochs 
         TRAINING_EPOCHS = trial.suggest_int('training_epochs', 10, 100)
-        logging.info(f'Training CDL model with {self.args.recon_loss} loss for {PRETRAIN_EPOCHS} epochs')
+        logging.info(f'Training CDL model with {self.args.recon_loss} loss for {TRAINING_EPOCHS} epochs')
         cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, 
                         epochs=TRAINING_EPOCHS, batch_size=self.args.batch_size, device=self.device, trial=trial)
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk).item()
