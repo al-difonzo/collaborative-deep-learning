@@ -18,7 +18,7 @@ from cdl import hyper
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Collaborative Deep Learning training')
+    parser = argparse.ArgumentParser(description='Collaborative Deep Learning training')
     parser.add_argument('--seed', type=int, default=1)
 
     parser.add_argument('--embedding', choices=['bert', 'bow'], default=None)

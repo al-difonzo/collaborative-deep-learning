@@ -11,7 +11,7 @@ from cdl import data
 from cdl.mf import MatrixFactorizationModel
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Collaborative Deep Learning inference')
+    parser = argparse.ArgumentParser(description='Collaborative Deep Learning inference')
     parser.add_argument('--model_path', type=str, default='model.pt')
     parser.add_argument('--dataset', type=str, default='citeulike-a')
     parser.add_argument('--embedding', type=str, default='bert')
