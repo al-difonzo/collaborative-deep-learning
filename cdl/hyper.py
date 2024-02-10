@@ -48,15 +48,17 @@ class OptunaWrapper:
         optimizer = torch.optim.AdamW(self.sdae.parameters(), lr=self.args.lr, weight_decay=config['lambda_w'])
 
         content_training_dataset = data.random_subset(self.content_data, int(self.num_items * 0.75))
+
+        # EPOCHS = self.args.pretrain_epochs 
+        PRETRAIN_EPOCHS = trial.suggest_int('pretrain_epochs', 5, 50)
+        logging.info(f'Pretraining SDAE with {self.args.recon_loss} loss for {PRETRAIN_EPOCHS} epochs')
+        cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, PRETRAIN_EPOCHS, self.args.batch_size, self.recon_loss_fn, optimizer)
         
-        # EPOCHS = self.args.epochs 
-        EPOCHS = trial.suggest_int('epochs', 10, 60)
-        logging.info(f'Pretraining SDAE with {self.args.recon_loss} loss for {EPOCHS} epochs')
-        cdl.train_stacked_autoencoder(self.sdae, content_training_dataset, self.args.corruption, EPOCHS, self.args.batch_size, self.recon_loss_fn, optimizer)
-        
-        # Train the model
+        # TRAINING_EPOCHS = self.args.epochs 
+        TRAINING_EPOCHS = trial.suggest_int('training_epochs', 10, 100)
+        logging.info(f'Training CDL model with {self.args.recon_loss} loss for {PRETRAIN_EPOCHS} epochs')
         cdl.train_model(self.sdae, self.mfm, self.content_data, self.train_data, optimizer, self.recon_loss_fn, config, 
-                        epochs=EPOCHS, batch_size=self.args.batch_size, device=self.device, trial=trial)
+                        epochs=TRAINING_EPOCHS, batch_size=self.args.batch_size, device=self.device, trial=trial)
         recall = self.mfm.compute_recall(self.valid_data.to_dense(), self.args.topk).item()
         trial.set_user_attr(f"Validation Recall@{self.args.topk}", recall)
         trial_dir = f'{os.path.dirname(self.args.model_path)}/trial_{trial.number}'
