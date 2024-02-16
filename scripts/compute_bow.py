@@ -118,7 +118,7 @@ if __name__ == '__main__':
     elif dataset_name in constants.MOVIELENS_CHOICES:
         # path = (f'data/processed/{dataset_name}/{col}_embedded_{st_model}.pt'
         #         if args.out_path is None else args.out_path)
-        out_path = 'computed_info_embedded_TFIDF_BOW.pt'
+        out_path = 'combined_info_embedded_TFIDF_BOW.pt'
         rich_df = pd.read_csv(args.in_path, index_col=0)
         # rich_df = pd.read_csv('data/preprocessed/ml-latest-small/rich_ml-latest-small_ready_to_embed.csv', index_col=0)
         compute_ml_bow(rich_df, out_path)
