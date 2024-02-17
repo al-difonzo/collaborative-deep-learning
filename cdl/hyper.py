@@ -73,7 +73,9 @@ class OptunaWrapper:
     
     def optimize(self, n_trials=10, timeout=600, study_name=None, storage=None):
         study = optuna.create_study(direction='minimize', study_name=study_name, storage=storage, load_if_exists=True)
-        
+        # Enqueue any pre-existing trials
+        # study.enqueue_trial({'lambda_n': 0, 'lambda_u': 0, 'lambda_v': 0, 'lambda_w': 0, 'pretrain_epochs': 0, 'training_epochs': 0})
+        # Run optimization
         study.optimize(self.objective, n_trials=n_trials, timeout=timeout)
         
         print("Study statistics: ")
