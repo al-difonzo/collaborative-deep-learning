@@ -85,7 +85,8 @@ if __name__ == '__main__':
         # Load pre-trained model tokenizer (vocabulary) and model (weights)
         tokenizer = BertTokenizer.from_pretrained(args.t_model)
         model = BertModel.from_pretrained(args.t_model).to(device)
-        model.eval()  # Put the model in evaluation mode
+    
+    model.eval()  # Put the model in evaluation mode
 
 
     if dataset_name == 'citeulike-a':

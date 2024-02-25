@@ -13,8 +13,8 @@ class TransformDataset:
         return len(self._dataset)
 
 
-def random_subset(x, k):
-    idx = torch.randperm(len(x))[:k]
+def random_subset(x, k, rng=None):
+    idx = torch.randperm(len(x), generator=rng)[:k]
     return torch.utils.data.Subset(x, idx)
 
 
@@ -40,6 +40,10 @@ def load_cf_train_data(dataset_name, path=None):
     mat = torch.load(path)
     return mat
 
+def load_cf_valid_data(dataset_name, path=None):
+    if path is None: path = f'data/processed/{dataset_name}/cf-valid-1.pt'
+    mat = torch.load(path)
+    return mat
 
 def load_cf_test_data(dataset_name, path=None):
     if path is None: path = f'data/processed/{dataset_name}/cf-test-1.pt'
@@ -58,7 +62,7 @@ def load_model(sdae, mfm, filename):
     d = torch.load(filename)
 
     if sdae is not None:
-        sdae.update_state_dict(d['autoencoder'])
+        sdae.load_state_dict(d['autoencoder'])
 
     if mfm is not None:
         mfm.update_state_dict(d['matrix_factorization_model'])

@@ -47,3 +47,16 @@ MOVIELENS_CHOICES = {
 ML_BASE_URL = 'http://files.grouplens.org/datasets/movielens'
 
 TMDB_BASE_URL = 'https://api.themoviedb.org/3/movie'
+
+import torch.nn as nn
+
+SDAE_ACTIVATIONS = {
+    'relu': nn.ReLU(),
+    'sigmoid': nn.Sigmoid(),
+    'tanh': nn.Tanh(),
+}
+
+RECON_LOSSES = {
+    'mse': nn.MSELoss(),
+    'cross-entropy': nn.BCEWithLogitsLoss(),
+}
